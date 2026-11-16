@@ -22,6 +22,8 @@
 					"locale",
 					"restrictions",
 					"state",
+					"history",
+					"memory",
 					"appearance",
 					"text"
 				]
@@ -51,6 +53,21 @@
 				"itemCount": 3,
 				"conversationId": "conv-1"
 			}
+		},
+		{
+			"v": 1,
+			"id": "c0a1b2c3-0000-4000-8000-000000000004",
+			"type": "state",
+			"ts": 1791374422500,
+			"data": {
+				"view": "welcome",
+				"busy": false,
+				"basketOpen": false,
+				"itemCount": 0,
+				"previousChats": 3,
+				"memory": true
+			},
+			"$comment": "Since SDK 2.5.0: an app with its own header shows Previous chats and What I remember by these."
 		}
 	],
 	"hostToPage": [
@@ -82,6 +99,20 @@
 			"id": "c0a1b2c3-0000-4000-8000-000000000013",
 			"type": "basket.close",
 			"ts": 1791374426000,
+			"data": {}
+		},
+		{
+			"v": 1,
+			"id": "c0a1b2c3-0000-4000-8000-000000000018",
+			"type": "history.open",
+			"ts": 1791374426300,
+			"data": {}
+		},
+		{
+			"v": 1,
+			"id": "c0a1b2c3-0000-4000-8000-000000000019",
+			"type": "memory.open",
+			"ts": 1791374426600,
 			"data": {}
 		},
 		{

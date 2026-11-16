@@ -145,13 +145,42 @@ public struct HephonChatState: Sendable, Decodable, Equatable {
     public let itemCount: Int
     /// The conversation, once there is one.
     public let conversationId: String?
+    /// The shopper's earlier chats in "Previous chats" (0 when the retailer does not show them):
+    /// show your own button for `openHistory()` while it is above 0. Nil from a page older than
+    /// 2.5.0. Since 2.5.0.
+    public let previousChats: Int?
+    /// "What I remember" has something to show or change (the retailer remembers shoppers): show
+    /// your own button for `openMemory()` while true. Nil from a page older than 2.5.0. Since 2.5.0.
+    public let memory: Bool?
 
-    public init(view: View, busy: Bool, basketOpen: Bool, itemCount: Int, conversationId: String? = nil) {
+    public init(
+        view: View, busy: Bool, basketOpen: Bool, itemCount: Int, conversationId: String? = nil,
+        previousChats: Int? = nil, memory: Bool? = nil
+    ) {
         self.view = view
         self.busy = busy
         self.basketOpen = basketOpen
         self.itemCount = itemCount
         self.conversationId = conversationId
+        self.previousChats = previousChats
+        self.memory = memory
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case view, busy, basketOpen, itemCount, conversationId, previousChats, memory
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        view = try container.decode(View.self, forKey: .view)
+        busy = try container.decode(Bool.self, forKey: .busy)
+        basketOpen = try container.decode(Bool.self, forKey: .basketOpen)
+        itemCount = try container.decode(Int.self, forKey: .itemCount)
+        // A value of another type counts as absent, as an older page's missing field does.
+        conversationId = (try? container.decodeIfPresent(String.self, forKey: .conversationId)) ?? nil
+        let count = (try? container.decodeIfPresent(Int.self, forKey: .previousChats)) ?? nil
+        previousChats = count.flatMap { $0 >= 0 ? $0 : nil }
+        memory = (try? container.decodeIfPresent(Bool.self, forKey: .memory)) ?? nil
     }
 }
 
@@ -527,6 +556,16 @@ public struct HostMessage: Sendable, Equatable {
     /// Closes the chat's basket. Since 2.2.0.
     public static func basketClose(id: String? = nil, timestamp: Date? = nil) -> HostMessage {
         HostMessage("basket.close", .empty, id: id, timestamp: timestamp)
+    }
+
+    /// Opens the chat's "Previous chats". Since 2.5.0.
+    public static func historyOpen(id: String? = nil, timestamp: Date? = nil) -> HostMessage {
+        HostMessage("history.open", .empty, id: id, timestamp: timestamp)
+    }
+
+    /// Opens the chat's "What I remember". Since 2.5.0.
+    public static func memoryOpen(id: String? = nil, timestamp: Date? = nil) -> HostMessage {
+        HostMessage("memory.open", .empty, id: id, timestamp: timestamp)
     }
 
     /// The welcome screen's suggestions, in place of the retailer's; an empty list brings the

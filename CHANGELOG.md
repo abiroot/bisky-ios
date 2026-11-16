@@ -1,3 +1,15 @@
+## 2.5.0
+
+Previous chats and What I remember from your own header. Nothing that worked in 2.4.0 changed:
+updating needs no code change.
+
+- **`openHistory()` and `openMemory()`** on `HephonAgentController` open the chat's "Previous chats"
+  and "What I remember" from your own header, for an app that hides the chat's (whose menu holds
+  them).
+- **`HephonChatState.previousChats` and `HephonChatState.memory`** say whether to show those
+  buttons: earlier chats to list, and whether the retailer remembers shoppers. Nil from a page
+  older than 2.5.0.
+
 ## 2.4.0
 
 Previous chats. Nothing that worked in 2.3.0 changed: updating needs no code change.

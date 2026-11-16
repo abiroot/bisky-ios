@@ -22,14 +22,14 @@ iOS 15 or later, Xcode 16 or later. No dependencies.
 https://github.com/abiroot/hephon-commerce-ios.git
 ```
 
-set Dependency Rule to **Up to Next Major Version** from `2.4.0`, and add `HephonCommerce`
+set Dependency Rule to **Up to Next Major Version** from `2.5.0`, and add `HephonCommerce`
 to your app target.
 
 **Package.swift:**
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/abiroot/hephon-commerce-ios.git", from: "2.4.0"),
+    .package(url: "https://github.com/abiroot/hephon-commerce-ios.git", from: "2.5.0"),
 ],
 targets: [
     .target(name: "YourApp", dependencies: [
@@ -46,7 +46,7 @@ The retailer's **Install** screen in Hephon shows the same steps with the latest
 - Package.swift: `swift package update`.
 
 Both stay within your major version. To cross one, read CHANGELOG.md (also on the Install
-screen), then raise the rule's lower bound (`from: "2.4.0"`). The Install screen shows which
+screen), then raise the rule's lower bound (`from: "2.5.0"`). The Install screen shows which
 version your app runs and says when an update is out.
 
 ### Voice (optional)
@@ -215,7 +215,7 @@ All run on the main actor.
 | `onSessionExpired` | the chat session ended | return a fresh launch token to continue in place, or nil (a throw counts as nil, and the next expiry asks again). After three refused tokens in a row (asked again after 2 s and 4 s) the controller stops asking |
 | `onMicrophonePermission` | the chat wants the microphone for voice | return whether iOS granted it; anything else denies |
 | `onTiming` | the chat was shown and is usable | `open` in ms, `preloaded` |
-| `onStateChange` | the chat's screen, its busy state or its basket changed (since 2.2.0) | `HephonChatState`: `view` (`.welcome`, `.conversation`), `busy`, `basketOpen`, `itemCount`, `conversationId` |
+| `onStateChange` | the chat's screen, its busy state or its basket changed (since 2.2.0) | `HephonChatState`: `view` (`.welcome`, `.conversation`), `busy`, `basketOpen`, `itemCount`, `conversationId`, and since 2.5.0 `previousChats`, `memory` |
 | `onClose` | the shopper tapped the chat's back arrow (`showBack`) | nothing. Without it, the view closes itself (see Open it as a full page) |
 | `onLog` | a `debug` line (since 2.3.0, see Debugging) | the line, as text |
 
@@ -270,7 +270,7 @@ controller.sendCartSnapshot(cart.lines.map { CartSnapshotItem(itemId: $0.id, qua
 
 - `setAppearance(HephonAppearance(...))`: restyles the open chat, see Appearance below.
 - `setText(HephonText(...))`: changes the open chat's words, see Text below.
-- `sendMessage`, `newChat`, `openBasket`, `closeBasket`, `setStarters`, `setLocale`,
+- `sendMessage`, `newChat`, `openBasket`, `closeBasket`, `openHistory`, `openMemory`, `setStarters`, `setLocale`,
   `setRestrictions`: steer the chat, see Control the chat below.
 
 Messages sent before the chat is ready are held and delivered on `ready`.
@@ -284,6 +284,11 @@ Since 2.2.0 your app can drive the open chat and follow it:
 controller.sendMessage("Snacks for a movie night")
 controller.newChat()                       // a new conversation with an empty chat basket
 controller.openBasket()                    // and closeBasket()
+
+// Since 2.5.0, when your header replaces the chat's (whose menu holds them): open "Previous
+// chats" and "What I remember". Show each button by the chat's state.
+controller.openHistory()                   // while state.previousChats ?? 0 > 0
+controller.openMemory()                    // while state.memory == true
 
 // The welcome screen's suggestions, in place of the retailer's (up to six). Tapping one sends
 // its prompt, or its label. An empty list brings the retailer's back.
@@ -519,7 +524,7 @@ press and what was under it, requests with their status and time, chat turns, th
 checkout, uncaught errors):
 
 ```
-load https://commerce.hephon.ai/c/noknok?lt=%E2%80%A6&embed=ios&sdk=2.4.0&debug=1
+load https://commerce.hephon.ai/c/noknok?lt=%E2%80%A6&embed=ios&sdk=2.5.0&debug=1
 -> basket.open 6f1c… held until the chat is ready
 <- ready a0c6…
 page info: press (touch) button "Check out" at 186,812

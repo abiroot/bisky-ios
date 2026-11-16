@@ -341,6 +341,19 @@ public final class HephonAgentController: ObservableObject {
         send(.basketClose())
     }
 
+    /// Opens the chat's "Previous chats", for an app that draws its own header (the chat's menu
+    /// is in the chat's). Show your button while `HephonChatState.previousChats` is above 0.
+    /// Since 2.5.0.
+    public func openHistory() {
+        send(.historyOpen())
+    }
+
+    /// Opens the chat's "What I remember", where the shopper sees, removes or stops what the
+    /// assistant remembers. Show your button while `HephonChatState.memory` is true. Since 2.5.0.
+    public func openMemory() {
+        send(.memoryOpen())
+    }
+
     /// The welcome screen's suggestions, in place of the retailer's: up to six, each sending
     /// its `prompt` (or its `label`) when tapped. An empty list brings the retailer's back.
     /// Held until the chat is ready, and sent again after every later load, so a reload keeps

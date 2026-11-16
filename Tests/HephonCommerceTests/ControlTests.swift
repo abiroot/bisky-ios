@@ -20,7 +20,7 @@ final class ControlContractTests: XCTestCase {
         // Capabilities pass through as the page lists them.
         XCTAssertEqual(ready.capabilities, [
             "cart.snapshot", "session.launch", "theme", "focus", "visibility", "chat.send", "chat.new",
-            "basket", "starters", "locale", "restrictions", "state", "appearance", "text",
+            "basket", "starters", "locale", "restrictions", "state", "history", "memory", "appearance", "text",
         ])
         XCTAssertEqual(
             parsed[1].event,
@@ -33,6 +33,12 @@ final class ControlContractTests: XCTestCase {
             ))
         )
         XCTAssertEqual(parsed[2].timestamp, Date(timeIntervalSince1970: 1_791_374_422))
+        XCTAssertEqual(
+            parsed[3].event,
+            .state(HephonChatState(
+                view: .welcome, busy: false, basketOpen: false, itemCount: 0, previousChats: 3, memory: true
+            ))
+        )
         // `state` is not a case of the 1.0.0 PageMessage, so a switch over it still compiles.
         try XCTAssertNil(PageMessage.parse(Fixture.page("state", in: "control_v1")))
     }
@@ -51,7 +57,7 @@ final class ControlContractTests: XCTestCase {
 
     func testBuildsEveryHostMessageAsTheFixtureDoes() throws {
         let expected = try Fixture.list("control_v1", "hostToPage")
-        XCTAssertEqual(expected.count, 8)
+        XCTAssertEqual(expected.count, 10)
         for envelope in expected {
             let id = try XCTUnwrap(envelope["id"] as? String)
             let at = try Date(timeIntervalSince1970: TimeInterval(XCTUnwrap(envelope["ts"] as? Int64)) / 1000)
@@ -62,6 +68,8 @@ final class ControlContractTests: XCTestCase {
             case "chat.new": .chatNew(id: id, timestamp: at)
             case "basket.open": .basketOpen(id: id, timestamp: at)
             case "basket.close": .basketClose(id: id, timestamp: at)
+            case "history.open": .historyOpen(id: id, timestamp: at)
+            case "memory.open": .memoryOpen(id: id, timestamp: at)
             case "starters":
                 try .starters(
                     XCTUnwrap(data["items"] as? [[String: String]]).map {
@@ -186,6 +194,8 @@ final class ControlControllerTests: XCTestCase {
         controller.newChat()
         controller.openBasket()
         controller.closeBasket()
+        controller.openHistory()
+        controller.openMemory()
         XCTAssertTrue(controller.setStarters([HephonStarter(label: "Breakfast for 4")]))
         XCTAssertTrue(controller.setLocale("ar-AE"))
         controller.setRestrictions([.pork])
@@ -193,15 +203,17 @@ final class ControlControllerTests: XCTestCase {
         XCTAssertEqual(web.delivered, [])
 
         try post(controller, Fixture.page("ready"))
-        await until { web.delivered.count == 7 }
+        await until { web.delivered.count == 9 }
         XCTAssertEqual(web.types, [
-            "chat.send", "chat.new", "basket.open", "basket.close", "starters", "locale", "restrictions",
+            "chat.send", "chat.new", "basket.open", "basket.close", "history.open", "memory.open",
+            "starters", "locale", "restrictions",
         ])
         XCTAssertEqual(try data(web.delivered[0]), ["text": "Snacks for a movie night"])
         XCTAssertEqual(try data(web.delivered[1]), [:])
-        XCTAssertEqual(try data(web.delivered[4]), ["items": [["label": "Breakfast for 4"]]])
-        XCTAssertEqual(try data(web.delivered[5]), ["locale": "ar-AE"])
-        XCTAssertEqual(try data(web.delivered[6]), ["exclude": ["pork"]])
+        XCTAssertEqual(try data(web.delivered[4]), [:])
+        XCTAssertEqual(try data(web.delivered[6]), ["items": [["label": "Breakfast for 4"]]])
+        XCTAssertEqual(try data(web.delivered[7]), ["locale": "ar-AE"])
+        XCTAssertEqual(try data(web.delivered[8]), ["exclude": ["pork"]])
     }
 
     func testRefusesWhatThePageWouldDrop() async throws {
@@ -305,10 +317,12 @@ final class ControlControllerTests: XCTestCase {
         }
         // At least once: a repeat of the same id is dropped.
         try post(controller, Fixture.page("state", in: "control_v1"))
-        XCTAssertEqual(states.map(\.view), [.welcome, .conversation])
-        XCTAssertEqual(states.map(\.itemCount), [0, 3])
-        XCTAssertEqual(states.last?.conversationId, "conv-1")
-        XCTAssertEqual(states.last?.busy, true)
+        XCTAssertEqual(states.map(\.view), [.welcome, .conversation, .welcome])
+        XCTAssertEqual(states.map(\.itemCount), [0, 3, 0])
+        XCTAssertEqual(states[1].conversationId, "conv-1")
+        XCTAssertEqual(states[1].busy, true)
+        XCTAssertEqual(states.map(\.previousChats), [nil, nil, 3])
+        XCTAssertEqual(states.last?.memory, true)
     }
 
     func testClosesTheViewShowingTheChatWhenTheAppSetNoOnClose() throws {
