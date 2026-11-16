@@ -28,6 +28,7 @@
 		"showBasketBar",
 		"showCheckout",
 		"showNewChat",
+		"showHistory",
 		"showFollowUps",
 		"showSteps",
 		"productSheet",
@@ -113,12 +114,13 @@
 				"showBasket": false,
 				"showCheckout": false,
 				"showNewChat": false,
+				"showHistory": true,
 				"showFollowUps": false,
 				"showSteps": false,
 				"productSheet": false,
 				"addFromCards": true
 			},
-			"expect": "https://commerce.hephon.ai/c/suppy?embed=android&sdk=1.2.0&ctaColor=%230A7A3D&headerColor=%23111827&bubbleColor=%232563EB&surfaceColor=%23F8FAFC&buttons=rounded&bubble=soft&font=system&starterStyle=list&showHeader=false&showLogo=false&showBasket=false&showCheckout=false&showNewChat=false&showFollowUps=false&showSteps=false&productSheet=false&addFromCards=true",
+			"expect": "https://commerce.hephon.ai/c/suppy?embed=android&sdk=1.2.0&ctaColor=%230A7A3D&headerColor=%23111827&bubbleColor=%232563EB&surfaceColor=%23F8FAFC&buttons=rounded&bubble=soft&font=system&starterStyle=list&showHeader=false&showLogo=false&showBasket=false&showCheckout=false&showNewChat=false&showHistory=true&showFollowUps=false&showSteps=false&productSheet=false&addFromCards=true",
 			"$comment": "The part colours, the button shape and every flag. A flag that is set is sent whether it is true or false; one that is not set is left out."
 		},
 		{
@@ -307,6 +309,7 @@
 		"showBasketBar",
 		"showCheckout",
 		"showNewChat",
+		"showHistory",
 		"showFollowUps",
 		"showSteps",
 		"productSheet",

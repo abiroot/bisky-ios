@@ -36,6 +36,7 @@ private func appearance(_ data: [String: Any]) throws -> HephonAppearance {
         showBasketBar: data["showBasketBar"] as? Bool,
         showCheckout: data["showCheckout"] as? Bool,
         showNewChat: data["showNewChat"] as? Bool,
+        showHistory: data["showHistory"] as? Bool,
         showFollowUps: data["showFollowUps"] as? Bool,
         showSteps: data["showSteps"] as? Bool,
         productSheet: data["productSheet"] as? Bool,
@@ -79,7 +80,7 @@ private let everything = HephonAppearance(
     cardColor: "#000009", textColor: "#00000A", mutedColor: "#00000B", lineColor: "#00000C",
     buttons: .pill, bubble: .soft, font: .manrope, fontFamily: "Avenir Next", starterStyle: .photos,
     showHeader: true, showLogo: false, showBasket: true, showBasketButton: false, showBasketBar: true,
-    showCheckout: false, showNewChat: true, showFollowUps: false, showSteps: true, productSheet: false,
+    showCheckout: false, showNewChat: true, showHistory: false, showFollowUps: false, showSteps: true, productSheet: false,
     addFromCards: true,
     showAssistantName: false, showStarters: true, showWelcome: false, showBack: true, showPoweredBy: false,
     hideOrderHelp: true, hideVoice: false, hideCall: true
@@ -102,14 +103,14 @@ final class AppearanceContractTests: XCTestCase {
 
         // Every key is a field: all set, all sent, in the fixture's order.
         let pairs = everything.pairs
-        XCTAssertEqual(pairs.count, 39)
+        XCTAssertEqual(pairs.count, 40)
         XCTAssertEqual(pairs.map(\.0), HephonAppearance.keys)
         XCTAssertEqual(pairs.map(\.1.query), [
             "auto", "#000001", "#000002", "#000003", "#000004", "square", "plain",
             "#000005", "#000006", "#000007", "#000008", "#000009", "#00000A", "#00000B", "#00000C",
             "pill", "soft", "manrope", "Avenir Next", "photos",
-            "true", "false", "true", "false", "true", "false", "true", "false", "true", "false", "true",
-            "false", "true", "false", "true", "false", "true", "false", "true",
+            "true", "false", "true", "false", "true", "false", "true", "false", "false", "true", "false",
+            "true", "false", "true", "false", "true", "false", "true", "false", "true",
         ])
         // The colours are the fields that take #RRGGBB, the flags the ones sent as booleans.
         XCTAssertEqual(pairs.filter { $0.1.query.hasPrefix("#") }.map(\.0), fixture["colors"] as? [String])

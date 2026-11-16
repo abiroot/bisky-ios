@@ -89,6 +89,8 @@ public struct HephonAppearance: Sendable, Equatable {
     public let showBasketBar: Bool?
     public let showCheckout: Bool?
     public let showNewChat: Bool?
+    /// "Previous chats" in the header menu: the shopper's chats from the last 30 days. Since 2.4.0.
+    public let showHistory: Bool?
     /// The suggested replies under an answer.
     public let showFollowUps: Bool?
     /// The agent's steps while it works.
@@ -152,6 +154,7 @@ public struct HephonAppearance: Sendable, Equatable {
         showBasketBar: Bool? = nil,
         showCheckout: Bool? = nil,
         showNewChat: Bool? = nil,
+        showHistory: Bool? = nil,
         showFollowUps: Bool? = nil,
         showSteps: Bool? = nil,
         productSheet: Bool? = nil,
@@ -207,6 +210,7 @@ public struct HephonAppearance: Sendable, Equatable {
         self.showBasketBar = showBasketBar
         self.showCheckout = showCheckout
         self.showNewChat = showNewChat
+        self.showHistory = showHistory
         self.showFollowUps = showFollowUps
         self.showSteps = showSteps
         self.productSheet = productSheet
@@ -255,7 +259,7 @@ public struct HephonAppearance: Sendable, Equatable {
         "cardColor", "textColor", "mutedColor", "lineColor",
         "buttons", "bubble", "font", "fontFamily", "starterStyle",
         "showHeader", "showLogo", "showBasket", "showBasketButton", "showBasketBar",
-        "showCheckout", "showNewChat", "showFollowUps", "showSteps", "productSheet", "addFromCards",
+        "showCheckout", "showNewChat", "showHistory", "showFollowUps", "showSteps", "productSheet", "addFromCards",
         "showAssistantName", "showStarters", "showWelcome", "showBack", "showPoweredBy",
         "hideOrderHelp", "hideVoice", "hideCall",
     ]
@@ -272,7 +276,7 @@ public struct HephonAppearance: Sendable, Equatable {
             text(buttons?.rawValue), text(bubble?.rawValue), text(font?.rawValue), text(fontFamily),
             text(starterStyle?.rawValue),
             flag(showHeader), flag(showLogo), flag(showBasket), flag(showBasketButton), flag(showBasketBar),
-            flag(showCheckout), flag(showNewChat), flag(showFollowUps), flag(showSteps), flag(productSheet),
+            flag(showCheckout), flag(showNewChat), flag(showHistory), flag(showFollowUps), flag(showSteps), flag(productSheet),
             flag(addFromCards),
             flag(showAssistantName), flag(showStarters), flag(showWelcome), flag(showBack), flag(showPoweredBy),
             flag(hideOrderHelp), flag(hideVoice), flag(hideCall),
@@ -309,6 +313,7 @@ public struct HephonAppearance: Sendable, Equatable {
             showBasketBar: other.showBasketBar ?? showBasketBar,
             showCheckout: other.showCheckout ?? showCheckout,
             showNewChat: other.showNewChat ?? showNewChat,
+            showHistory: other.showHistory ?? showHistory,
             showFollowUps: other.showFollowUps ?? showFollowUps,
             showSteps: other.showSteps ?? showSteps,
             productSheet: other.productSheet ?? productSheet,

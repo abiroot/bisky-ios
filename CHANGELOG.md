@@ -1,3 +1,12 @@
+## 2.4.0
+
+Previous chats. Nothing that worked in 2.3.0 changed: updating needs no code change.
+
+- `HephonAppearance(showHistory:)`: "Previous chats" in the chat's header menu, listing the
+  shopper's chats in this store from the last 30 days (a signed-in shopper's on any device, an
+  anonymous one's in the same app). Like the other `show*` flags it switches the retailer's
+  setting on or off for your screen; `nil` leaves it to the retailer's setting (off by default).
+
 ## 2.3.0
 
 Debug mode, for finding where a tap or a message stops. Nothing that worked in 2.2.0 changed:

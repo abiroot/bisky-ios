@@ -22,14 +22,14 @@ iOS 15 or later, Xcode 16 or later. No dependencies.
 https://github.com/abiroot/hephon-commerce-ios.git
 ```
 
-set Dependency Rule to **Up to Next Major Version** from `2.3.0`, and add `HephonCommerce`
+set Dependency Rule to **Up to Next Major Version** from `2.4.0`, and add `HephonCommerce`
 to your app target.
 
 **Package.swift:**
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/abiroot/hephon-commerce-ios.git", from: "2.3.0"),
+    .package(url: "https://github.com/abiroot/hephon-commerce-ios.git", from: "2.4.0"),
 ],
 targets: [
     .target(name: "YourApp", dependencies: [
@@ -46,7 +46,7 @@ The retailer's **Install** screen in Hephon shows the same steps with the latest
 - Package.swift: `swift package update`.
 
 Both stay within your major version. To cross one, read CHANGELOG.md (also on the Install
-screen), then raise the rule's lower bound (`from: "2.3.0"`). The Install screen shows which
+screen), then raise the rule's lower bound (`from: "2.4.0"`). The Install screen shows which
 version your app runs and says when an update is out.
 
 ### Voice (optional)
@@ -403,6 +403,7 @@ controller.setAppearance(HephonAppearance(scheme: .light, showBasket: false))
 | `showBasketButton` | the basket button in the header |
 | `showBasketBar` | the summary bar above the message box (item count, total, "View basket"). An app with its own cart bar sets it `false` |
 | `showNewChat` | the new chat button |
+| `showHistory` | "Previous chats" in the header menu (2.4.0) |
 | `showFollowUps` | the suggested replies under an answer |
 | `showSteps` | the agent's steps while it works |
 | `productSheet` | tapping a product opens its sheet in the chat |
@@ -518,7 +519,7 @@ press and what was under it, requests with their status and time, chat turns, th
 checkout, uncaught errors):
 
 ```
-load https://commerce.hephon.ai/c/noknok?lt=%E2%80%A6&embed=ios&sdk=2.3.0&debug=1
+load https://commerce.hephon.ai/c/noknok?lt=%E2%80%A6&embed=ios&sdk=2.4.0&debug=1
 -> basket.open 6f1c… held until the chat is ready
 <- ready a0c6…
 page info: press (touch) button "Check out" at 186,812
