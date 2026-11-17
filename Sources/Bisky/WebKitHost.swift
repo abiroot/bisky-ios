@@ -90,7 +90,8 @@ final class WebKitHost: NSObject, WebViewDriving, WKNavigationDelegate, WKUIDele
         }
         // No target frame: a target="_blank" link or window.open, never the chat itself.
         let isMainFrame = navigationAction.targetFrame?.isMainFrame ?? false
-        decisionHandler(controller.navigate(to: url, isMainFrame: isMainFrame) ? .allow : .cancel)
+        let tapped = navigationAction.navigationType == .linkActivated
+        decisionHandler(controller.navigate(to: url, isMainFrame: isMainFrame, userGesture: tapped) ? .allow : .cancel)
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation _: WKNavigation!) {
@@ -123,7 +124,11 @@ final class WebKitHost: NSObject, WebViewDriving, WKNavigationDelegate, WKUIDele
         windowFeatures _: WKWindowFeatures
     ) -> WKWebView? {
         if let url = navigationAction.request.url {
-            _ = controller?.navigate(to: url, isMainFrame: false)
+            _ = controller?.navigate(
+                to: url,
+                isMainFrame: false,
+                userGesture: navigationAction.navigationType == .linkActivated
+            )
         }
         return nil
     }

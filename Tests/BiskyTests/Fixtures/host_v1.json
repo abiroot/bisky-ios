@@ -1,7 +1,7 @@
 {
 	"$comment": "Host-side contract every native SDK implements (docs/integrations/SDKS.md 2.2): which navigations the chat webview allows, opens outside the app or blocks; how an origin is normalized; and the chat URL it opens. Canonical copy: packages/embed/fixtures/host_v1.json, checked for consistency by packages/embed/src/__tests__/host-contract.test.ts. Every SDK keeps a byte-identical copy (scripts/check-sdk-fixtures.ts). chatUrl.expect is compared as origin, path and an unordered set of decoded query pairs; \"error\" means the SDK refuses the input. Keys starting with $ are comments.",
 	"navigation": {
-		"$comment": "decideNavigation(url, isMainFrame, allowedOrigins, chatPath). allow: load in the webview. openExternally: hand to the platform (browser, dialer, mail, app). block: refuse.",
+		"$comment": "decideNavigation(url, isMainFrame, allowedOrigins, chatPath, userInitiated). allow: load in the webview. openExternally: hand to the platform (browser, dialer, mail, app). block: refuse. userInitiated is a tap by the shopper (absent = true); without one nothing opens outside the app.",
 		"allowedOrigins": ["https://bisky.ai", "https://chat.suppy.app"],
 		"chatPath": "/c/suppy",
 		"cases": [
@@ -169,6 +169,34 @@
 				"url": "data:text/html,<p>hi</p>",
 				"isMainFrame": false,
 				"expect": "block"
+			},
+			{
+				"url": "https://bisky.ai/c/suppy?embed=flutter",
+				"isMainFrame": true,
+				"userInitiated": false,
+				"expect": "allow",
+				"$comment": "The chat loads without a tap: loading it is the SDK's own doing."
+			},
+			{
+				"url": "https://www.bisky.ai/c/suppy",
+				"isMainFrame": true,
+				"userInitiated": false,
+				"expect": "block",
+				"$comment": "A redirect of the chat's host while it loads: refused, never the browser (2026-11-17: every app start opened the browser)."
+			},
+			{
+				"url": "https://bisky.ai/legal/privacy",
+				"isMainFrame": true,
+				"userInitiated": false,
+				"expect": "block",
+				"$comment": "The Privacy page with no tap: a script or redirect, not the shopper."
+			},
+			{
+				"url": "tel:+97140000000",
+				"isMainFrame": false,
+				"userInitiated": false,
+				"expect": "block",
+				"$comment": "Nothing opens the dialer without a tap."
 			}
 		]
 	},

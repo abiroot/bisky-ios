@@ -18,12 +18,18 @@ public enum BiskyNavigation: String, Sendable {
     /// A web link opens outside the app even when `isMainFrame` is false: WebKit reports a
     /// `target="_blank"` link (how the chat renders the agent's links) as a navigation with no
     /// target frame. The chat loads no frames of its own, so such a request is a tap.
+    ///
+    /// Only the shopper leaves the app: with `userInitiated` false (a redirect, a script,
+    /// anything before the chat has loaded) nothing opens outside, it is blocked. A redirect of
+    /// the chat's host once sent every app start to the browser.
     public static func decide(
         _ url: URL,
         isMainFrame: Bool,
         allowedOrigins: Set<String>,
-        chatPath: String
+        chatPath: String,
+        userInitiated: Bool = true
     ) -> BiskyNavigation {
+        let outside: BiskyNavigation = userInitiated ? .openExternally : .block
         let scheme = url.scheme?.lowercased() ?? ""
         if scheme == "about" {
             return .allow
@@ -36,12 +42,12 @@ public enum BiskyNavigation: String, Sendable {
             return .allow
         }
         if linkSchemes.contains(scheme) {
-            return .openExternally
+            return outside
         }
         if !isMainFrame || scheme == "javascript" || scheme == "data" {
             return .block
         }
-        return .openExternally
+        return outside
     }
 
     /// `scheme://host[:port]`, lowercased, without the default port, or nil for anything but

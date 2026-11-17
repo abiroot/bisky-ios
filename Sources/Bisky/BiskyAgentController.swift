@@ -683,10 +683,21 @@ public final class BiskyAgentController: ObservableObject {
     }
 
     /// Whether the web view loads `url`; anything that opens outside the app is opened here.
-    func navigate(to url: URL, isMainFrame: Bool) -> Bool {
-        let decision = decide(url, isMainFrame: isMainFrame)
+    /// `userGesture`: WebKit reports a tap (`.linkActivated`). Only a tap on a chat that has
+    /// loaded leaves the app; a main-frame load refused while the chat loads (a redirect away
+    /// from it) fails the page instead of leaving it loading.
+    func navigate(to url: URL, isMainFrame: Bool, userGesture: Bool = true) -> Bool {
+        let decision = decide(url, isMainFrame: isMainFrame, userInitiated: userGesture && pageState == .loaded)
         if decision == .openExternally, !disposed {
             driver?.openExternally(url)
+        }
+        if decision == .block, isMainFrame, pageState == .loading, !disposed {
+            trace("page refused \(Self.redacted(url)) while loading")
+            if kept, !shown {
+                release()
+            } else {
+                pageState = .failed
+            }
         }
         return decision == .allow
     }
@@ -766,12 +777,13 @@ public final class BiskyAgentController: ObservableObject {
 
     // MARK: - Private
 
-    private func decide(_ url: URL, isMainFrame: Bool) -> BiskyNavigation {
+    private func decide(_ url: URL, isMainFrame: Bool, userInitiated: Bool = true) -> BiskyNavigation {
         BiskyNavigation.decide(
             url,
             isMainFrame: isMainFrame,
             allowedOrigins: allowedOrigins,
-            chatPath: chatPath
+            chatPath: chatPath,
+            userInitiated: userInitiated
         )
     }
 

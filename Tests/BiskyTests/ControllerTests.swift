@@ -311,8 +311,26 @@ final class ControllerTests: XCTestCase {
         XCTAssertFalse(granted)
     }
 
+    func testNeverOpensAnythingOutsideWhileTheChatLoadsOrWithoutATap() {
+        let (controller, web) = open()
+        controller.didStartLoading()
+        // commerce.hephon.ai answered 301 to bisky.ai on 2026-11-17: every app start opened the browser.
+        XCTAssertFalse(controller.navigate(to: URL(string: "https://www.bisky.ai/c/suppy-demo")!, isMainFrame: true))
+        XCTAssertFalse(controller.navigate(to: URL(string: "tel:+9611234567")!, isMainFrame: false))
+        XCTAssertEqual(web.opened, [])
+        XCTAssertEqual(controller.pageState, .failed)
+        controller.didStartLoading()
+        controller.didFinishLoading()
+        // Loaded, but a script or redirect: still not the shopper.
+        XCTAssertFalse(
+            controller.navigate(to: URL(string: "\(bisky)/legal/privacy")!, isMainFrame: true, userGesture: false)
+        )
+        XCTAssertEqual(web.opened, [])
+    }
+
     func testKeepsTheWebViewOnTheChat() {
         let (controller, web) = open()
+        controller.didFinishLoading()
         func go(_ url: String, main: Bool = true) -> Bool {
             controller.navigate(to: URL(string: url)!, isMainFrame: main)
         }

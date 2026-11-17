@@ -212,11 +212,13 @@ final class HostContractTests: XCTestCase {
             let raw = try XCTUnwrap(item["url"] as? String)
             let url = try XCTUnwrap(URL(string: raw), raw)
             let isMainFrame = try XCTUnwrap(item["isMainFrame"] as? Bool)
+            let tapped = item["userInitiated"] as? Bool ?? true
             XCTAssertEqual(
-                BiskyNavigation.decide(url, isMainFrame: isMainFrame, allowedOrigins: allowed, chatPath: chatPath)
-                    .rawValue,
+                BiskyNavigation.decide(
+                    url, isMainFrame: isMainFrame, allowedOrigins: allowed, chatPath: chatPath, userInitiated: tapped
+                ).rawValue,
                 item["expect"] as? String,
-                "\(raw) (main frame: \(isMainFrame))"
+                "\(raw) (main frame: \(isMainFrame), tapped: \(tapped))"
             )
         }
     }

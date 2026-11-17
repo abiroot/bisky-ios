@@ -1,3 +1,14 @@
+## 2.6.1
+
+Only the shopper leaves the app.
+
+- **A navigation nobody tapped stays in**: a server redirect, a script, or anything while the chat
+  is loading or hidden is refused instead of opening the browser. Only a link the shopper taps on a
+  loaded chat opens outside the app (the browser, the dialer, mail).
+- **A main-frame load refused while the chat loads fails the page**, so a shown chat says it could
+  not open instead of loading forever.
+- Fixes apps on 2.5.x that opened the browser at every launch when the chat's host redirected.
+
 ## 2.6.0
 
 Words per language, and the view's own words in Arabic and French. Renamed to Bisky: a new package name, and the public types are `Bisky*` (formerly `Hephon*`),
