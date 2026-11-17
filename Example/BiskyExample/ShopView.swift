@@ -1,5 +1,5 @@
 import AVFAudio
-import HephonCommerce
+import Bisky
 import SwiftUI
 
 /// A small shop: its own cart, kept in step with the agent through the callbacks, and a log of
@@ -9,11 +9,11 @@ import SwiftUI
 /// In a real app your server signs a launch token for the shopper; here you paste a code
 /// (Install screen, Test, Get a test code) or a token, or leave it empty for an anonymous chat.
 ///
-/// Defaults come from the scheme's environment: HEPHON_HOST (the local dev server unless set)
-/// and HEPHON_ORG.
+/// Defaults come from the scheme's environment: BISKY_HOST (the local dev server unless set)
+/// and BISKY_ORG.
 struct ShopView: View {
-    @AppStorage("host") private var host = ProcessInfo.processInfo.environment["HEPHON_HOST"] ?? "http://localhost:3051"
-    @AppStorage("organization") private var organization = ProcessInfo.processInfo.environment["HEPHON_ORG"] ?? "suppy"
+    @AppStorage("host") private var host = ProcessInfo.processInfo.environment["BISKY_HOST"] ?? "http://localhost:3051"
+    @AppStorage("organization") private var organization = ProcessInfo.processInfo.environment["BISKY_ORG"] ?? "suppy"
     @AppStorage("keep") private var keep = true
     @State private var launch = ""
     @StateObject private var shop = Shop()
@@ -80,7 +80,7 @@ struct ShopView: View {
             }
             .navigationTitle("Demo shop")
         }
-        .sheet(item: $shop.presented) { HephonAgentView(controller: $0) }
+        .sheet(item: $shop.presented) { BiskyAgentView(controller: $0) }
         // Where the assistant is likely to be opened, each time the screen is back: a hidden
         // chat is released after 10 minutes and on a memory warning.
         .onAppear(perform: preload)
@@ -115,16 +115,16 @@ final class Shop: ObservableObject {
     }
 
     /// The chat on screen; the sheet clears it when the shopper closes it.
-    @Published var presented: HephonAgentController?
+    @Published var presented: BiskyAgentController?
     @Published private(set) var cart: [String: Int] = [:]
     @Published private(set) var events: [Event] = []
     @Published private(set) var problem: String?
     /// Every `onReady` and `onTiming`, for the scripted runs.
     private(set) var readies = 0
-    private(set) var timings: [HephonOpenTiming] = []
+    private(set) var timings: [BiskyOpenTiming] = []
 
     /// The chat that stays loaded between opens, and what it was made for.
-    private(set) var kept: (chat: Chat, controller: HephonAgentController)?
+    private(set) var kept: (chat: Chat, controller: BiskyAgentController)?
 
     /// Loads the chat ahead of the tap.
     func preload(_ chat: Chat) {
@@ -132,7 +132,7 @@ final class Shop: ObservableObject {
     }
 
     func open(_ chat: Chat, keep: Bool, asking message: String? = nil) {
-        let controller: HephonAgentController?
+        let controller: BiskyAgentController?
         if keep {
             controller = keeping(chat)
             // Dismissing the sheet then hides the chat instead of ending it.
@@ -158,7 +158,7 @@ final class Shop: ObservableObject {
         kept = nil
     }
 
-    private func keeping(_ chat: Chat) -> HephonAgentController? {
+    private func keeping(_ chat: Chat) -> BiskyAgentController? {
         if kept?.chat != chat {
             forget()
             kept = make(chat).map { (chat, $0) }
@@ -166,14 +166,14 @@ final class Shop: ObservableObject {
         return kept?.controller
     }
 
-    private func make(_ chat: Chat) -> HephonAgentController? {
+    private func make(_ chat: Chat) -> BiskyAgentController? {
         guard let url = URL(string: chat.host.trimmingCharacters(in: .whitespaces)), url.host != nil else {
-            problem = "Enter a host like https://commerce.hephon.ai"
+            problem = "Enter a host like https://bisky.ai"
             return nil
         }
         problem = nil
         let value = chat.launch.trimmingCharacters(in: .whitespaces)
-        let controller = HephonAgentController(
+        let controller = BiskyAgentController(
             host: url,
             organization: chat.organization.trimmingCharacters(in: .whitespaces),
             // A launch token is a JWT: three dot-separated parts.
@@ -181,8 +181,8 @@ final class Shop: ObservableObject {
             locale: Locale.preferredLanguages.first,
             // The welcome screen's suggestions, in place of the retailer's.
             starters: [
-                HephonStarter(label: "Breakfast for 4"),
-                HephonStarter(label: "Movie night", prompt: "Snacks for a movie night for 4 people"),
+                BiskyStarter(label: "Breakfast for 4"),
+                BiskyStarter(label: "Movie night", prompt: "Snacks for a movie night for 4 people"),
             ]
         )
         controller.onReady = { [weak self] ready in
@@ -249,7 +249,7 @@ final class Shop: ObservableObject {
     }
 
     private func record(_ text: String) {
-        print("Hephon", text)
+        print("Bisky", text)
         events.insert(Event(text: text), at: 0)
     }
 }

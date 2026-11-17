@@ -1,5 +1,5 @@
 import Foundation
-@testable import HephonCommerce
+@testable import Bisky
 import XCTest
 
 /// The web view as the controller sees it, recording what the controller does with it.
@@ -39,7 +39,7 @@ final class FakeWebView: WebViewDriving {
     }
 }
 
-private let hephon = "https://commerce.hephon.ai"
+private let bisky = "https://bisky.ai"
 
 @MainActor
 final class ControllerTests: XCTestCase {
@@ -53,11 +53,11 @@ final class ControllerTests: XCTestCase {
 
     /// A controller showing the chat in a fake web view, every callback logged.
     private func open(
-        launch: HephonLaunch? = .token("token-1"),
+        launch: BiskyLaunch? = .token("token-1"),
         onSessionExpired: (@MainActor () async throws -> String?)? = nil,
         onMicrophonePermission: (@MainActor () async throws -> Bool)? = nil
-    ) -> (HephonAgentController, FakeWebView) {
-        let controller = HephonAgentController(
+    ) -> (BiskyAgentController, FakeWebView) {
+        let controller = BiskyAgentController(
             organization: "suppy-demo",
             launch: launch,
             store: "branch-7",
@@ -82,8 +82,8 @@ final class ControllerTests: XCTestCase {
         return (controller, web)
     }
 
-    /// What the chat page posts, from its main frame on the Hephon host.
-    private func post(_ controller: HephonAgentController, _ json: String, origin: String? = hephon, main: Bool = true) {
+    /// What the chat page posts, from its main frame on the Bisky host.
+    private func post(_ controller: BiskyAgentController, _ json: String, origin: String? = bisky, main: Bool = true) {
         controller.receive(json, isMainFrame: main, origin: origin)
     }
 
@@ -96,9 +96,9 @@ final class ControllerTests: XCTestCase {
         XCTAssertEqual(web.loads, [controller.url])
         XCTAssertEqual(
             controller.url.absoluteString,
-            "\(hephon)/c/suppy-demo?lt=token-1&embed=ios&sdk=\(HephonCommerceSDK.version)&locale=ar"
+            "\(bisky)/c/suppy-demo?lt=token-1&embed=ios&sdk=\(BiskySDK.version)&locale=ar"
         )
-        XCTAssertEqual(controller.allowedOrigins, [hephon, "https://chat.suppy.app"])
+        XCTAssertEqual(controller.allowedOrigins, [bisky, "https://chat.suppy.app"])
         XCTAssertEqual(controller.pageState, .loading)
     }
 
@@ -113,7 +113,7 @@ final class ControllerTests: XCTestCase {
         // At-least-once delivery: a repeat of the same id is dropped.
         try post(controller, Fixture.page("cart.item_added"))
         // Not ours, or not this version: ignored.
-        post(controller, #"{"type":"hephon-commerce:cart","cart":{}}"#)
+        post(controller, #"{"type":"bisky:cart","cart":{}}"#)
         try post(controller, Fixture.page("cart.item_added", ["id": "other", "v": 2]))
 
         XCTAssertEqual(log, [
@@ -128,7 +128,7 @@ final class ControllerTests: XCTestCase {
         let added = try Fixture.page("cart.item_added")
         post(controller, added, main: false)
         post(controller, added, origin: "https://evil.example")
-        post(controller, added, origin: "http://commerce.hephon.ai")
+        post(controller, added, origin: "http://bisky.ai")
         post(controller, added, origin: nil)
         XCTAssertEqual(log, [])
         // The custom domain is the chat too.
@@ -140,7 +140,7 @@ final class ControllerTests: XCTestCase {
         let (controller, _) = open()
         let first = try Fixture.page("cart.item_added", ["id": "id-0"])
         post(controller, first)
-        for index in 1 ... HephonAgentController.seenLimit - 1 {
+        for index in 1 ... BiskyAgentController.seenLimit - 1 {
             try post(controller, Fixture.page("cart.item_added", ["id": "id-\(index)"]))
         }
         post(controller, first)
@@ -282,32 +282,32 @@ final class ControllerTests: XCTestCase {
 
     func testGrantsTheMicrophoneOnlyAfterTheAppHasIt() async {
         let (controller, _) = open(onMicrophonePermission: { [unowned self] in osGranted })
-        var granted = await controller.allowsMicrophone(origin: hephon, microphoneOnly: true)
+        var granted = await controller.allowsMicrophone(origin: bisky, microphoneOnly: true)
         XCTAssertFalse(granted)
         osGranted = true
-        granted = await controller.allowsMicrophone(origin: hephon, microphoneOnly: true)
+        granted = await controller.allowsMicrophone(origin: bisky, microphoneOnly: true)
         XCTAssertTrue(granted)
         granted = await controller.allowsMicrophone(origin: "https://chat.suppy.app", microphoneOnly: true)
         XCTAssertTrue(granted)
         // Camera, or camera and microphone, or another origin: never.
-        granted = await controller.allowsMicrophone(origin: hephon, microphoneOnly: false)
+        granted = await controller.allowsMicrophone(origin: bisky, microphoneOnly: false)
         XCTAssertFalse(granted)
         granted = await controller.allowsMicrophone(origin: "https://evil.example", microphoneOnly: true)
         XCTAssertFalse(granted)
         granted = await controller.allowsMicrophone(origin: nil, microphoneOnly: true)
         XCTAssertFalse(granted)
         controller.dispose()
-        granted = await controller.allowsMicrophone(origin: hephon, microphoneOnly: true)
+        granted = await controller.allowsMicrophone(origin: bisky, microphoneOnly: true)
         XCTAssertFalse(granted)
     }
 
     func testDeniesTheMicrophoneWithoutACallbackOrWhenItThrows() async {
         struct PluginMissing: Error {}
         let (silent, _) = open()
-        var granted = await silent.allowsMicrophone(origin: hephon, microphoneOnly: true)
+        var granted = await silent.allowsMicrophone(origin: bisky, microphoneOnly: true)
         XCTAssertFalse(granted)
         let (throwing, _) = open(onMicrophonePermission: { throw PluginMissing() })
-        granted = await throwing.allowsMicrophone(origin: hephon, microphoneOnly: true)
+        granted = await throwing.allowsMicrophone(origin: bisky, microphoneOnly: true)
         XCTAssertFalse(granted)
     }
 
@@ -316,19 +316,19 @@ final class ControllerTests: XCTestCase {
         func go(_ url: String, main: Bool = true) -> Bool {
             controller.navigate(to: URL(string: url)!, isMainFrame: main)
         }
-        XCTAssertTrue(go("\(hephon)/c/suppy-demo?view=support"))
+        XCTAssertTrue(go("\(bisky)/c/suppy-demo?view=support"))
         XCTAssertTrue(go("https://chat.suppy.app/c/suppy-demo"))
         XCTAssertTrue(go("about:blank"))
         XCTAssertFalse(go("javascript:alert(1)", main: false))
         // A target="_blank" link: opened outside, not in the web view.
         XCTAssertFalse(go("https://evil.example/c/suppy-demo", main: false))
         // The chat's own Privacy link would replace the chat in the sheet.
-        XCTAssertFalse(go("\(hephon)/legal/privacy", main: false))
+        XCTAssertFalse(go("\(bisky)/legal/privacy", main: false))
         XCTAssertFalse(go("https://chat.suppy.app/legal/privacy"))
         XCTAssertFalse(go("tel:+9611234567"))
         XCTAssertEqual(web.opened.map(\.absoluteString), [
             "https://evil.example/c/suppy-demo",
-            "\(hephon)/legal/privacy",
+            "\(bisky)/legal/privacy",
             "https://chat.suppy.app/legal/privacy",
             "tel:+9611234567",
         ])
@@ -338,14 +338,14 @@ final class ControllerTests: XCTestCase {
         let (controller, web) = open()
         controller.didFailLoading(URLError(.notConnectedToInternet))
         XCTAssertEqual(controller.pageState, .failed)
-        web.url = URL(string: "\(hephon)/c/suppy-demo?view=support")
+        web.url = URL(string: "\(bisky)/c/suppy-demo?view=support")
         controller.reload()
         XCTAssertEqual(controller.pageState, .loading)
-        XCTAssertEqual(web.loads.last, URL(string: "\(hephon)/c/suppy-demo?view=support"))
+        XCTAssertEqual(web.loads.last, URL(string: "\(bisky)/c/suppy-demo?view=support"))
         web.url = URL(string: "about:blank")
         controller.reload()
         XCTAssertEqual(web.loads.last, controller.url)
-        web.url = URL(string: "\(hephon)/legal/privacy")
+        web.url = URL(string: "\(bisky)/legal/privacy")
         controller.reload()
         XCTAssertEqual(web.loads.last, controller.url)
         web.url = nil
@@ -365,7 +365,7 @@ final class ControllerTests: XCTestCase {
         XCTAssertEqual(controller.pageState, .loading)
         controller.didFailLoading(NSError(
             domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet,
-            userInfo: [NSURLErrorFailingURLErrorKey: URL(string: "\(hephon)/c/suppy-demo")!]
+            userInfo: [NSURLErrorFailingURLErrorKey: URL(string: "\(bisky)/c/suppy-demo")!]
         ))
         XCTAssertEqual(controller.pageState, .failed)
         controller.didStartLoading()

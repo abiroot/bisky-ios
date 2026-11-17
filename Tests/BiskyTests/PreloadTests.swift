@@ -1,10 +1,10 @@
 import Foundation
-@testable import HephonCommerce
+@testable import Bisky
 import UIKit
 import WebKit
 import XCTest
 
-private let hephon = "https://commerce.hephon.ai"
+private let bisky = "https://bisky.ai"
 
 /// preload_v1.json: the bridge messages and URL rules added in SDK 1.1.0.
 final class PreloadContractTests: XCTestCase {
@@ -18,11 +18,11 @@ final class PreloadContractTests: XCTestCase {
             .painted,
             // A preloaded first open, a reopen, a show with no frame confirmed, a page that
             // started shown.
-            .timing(HephonOpenTiming(open: 85, preloaded: true)),
-            .timing(HephonOpenTiming(open: 40, preloaded: true)),
-            .timing(HephonOpenTiming(open: nil, preloaded: true)),
-            .timing(HephonOpenTiming(open: nil, preloaded: false)),
-            .message(.ready(HephonReady(
+            .timing(BiskyOpenTiming(open: 85, preloaded: true)),
+            .timing(BiskyOpenTiming(open: 40, preloaded: true)),
+            .timing(BiskyOpenTiming(open: nil, preloaded: true)),
+            .timing(BiskyOpenTiming(open: nil, preloaded: false)),
+            .message(.ready(BiskyReady(
                 orgSlug: "suppy-demo", storeId: "branch-7",
                 capabilities: ["cart.snapshot", "session.launch", "theme", "focus", "visibility"],
                 conversationId: nil, hostSessionId: nil
@@ -54,7 +54,7 @@ final class PreloadContractTests: XCTestCase {
         }
         XCTAssertEqual(
             PageEvent.parse(try Fixture.page("timing", ["data": ["open": 0, "preloaded": false]], in: preload))?.event,
-            .timing(HephonOpenTiming(open: 0, preloaded: false))
+            .timing(BiskyOpenTiming(open: 0, preloaded: false))
         )
     }
 
@@ -79,24 +79,24 @@ final class PreloadContractTests: XCTestCase {
         XCTAssertEqual(cases.count, 4)
         for item in cases {
             let raw = try XCTUnwrap(item["url"] as? String)
-            let url = try HephonNavigation.relaunchURL(
+            let url = try BiskyNavigation.relaunchURL(
                 XCTUnwrap(URL(string: raw)), store: XCTUnwrap(item["store"] as? String)
             )
             XCTAssertEqual(query(url), try query(XCTUnwrap(URL(string: XCTUnwrap(item["expect"] as? String)))), raw)
             XCTAssertEqual(url.path, "/c/suppy", raw)
-            XCTAssertEqual(url.host, "commerce.hephon.ai", raw)
+            XCTAssertEqual(url.host, "bisky.ai", raw)
         }
     }
 
     func testAFreshTokenReplacesTheSpentOneAndIsEncoded() throws {
-        let url = HephonNavigation.relaunchURL(
-            URL(string: "\(hephon)/c/suppy?code=abc&embed=ios&sdk=1.1.0&store=s1#top")!,
+        let url = BiskyNavigation.relaunchURL(
+            URL(string: "\(bisky)/c/suppy?code=abc&embed=ios&sdk=1.1.0&store=s1#top")!,
             store: "s2", launchToken: "a+b/c"
         )
-        XCTAssertEqual(url.absoluteString, "\(hephon)/c/suppy?lt=a%2Bb%2Fc&embed=ios&sdk=1.1.0&store=s1")
+        XCTAssertEqual(url.absoluteString, "\(bisky)/c/suppy?lt=a%2Bb%2Fc&embed=ios&sdk=1.1.0&store=s1")
         XCTAssertEqual(
-            HephonNavigation.relaunchURL(URL(string: "\(hephon)/c/suppy?lt=a.b.c")!).absoluteString,
-            "\(hephon)/c/suppy"
+            BiskyNavigation.relaunchURL(URL(string: "\(bisky)/c/suppy?lt=a.b.c")!).absoluteString,
+            "\(bisky)/c/suppy"
         )
     }
 }
@@ -116,7 +116,7 @@ private let blank = URL(string: "about:blank")!
 final class PreloadTests: XCTestCase {
     /// Every web view the controller made, in order.
     private var webs: [FakeWebView] = []
-    private var timings: [HephonOpenTiming] = []
+    private var timings: [BiskyOpenTiming] = []
     private var readies = 0
     private var warnings: [String] = []
     /// Calls of the app's onSessionExpired.
@@ -135,10 +135,10 @@ final class PreloadTests: XCTestCase {
     }
 
     private func make(
-        launch: HephonLaunch? = .token("token-1"),
+        launch: BiskyLaunch? = .token("token-1"),
         onSessionExpired: (@MainActor () async throws -> String?)? = nil
-    ) -> HephonAgentController {
-        let controller = HephonAgentController(organization: "suppy-demo", launch: launch, locale: "ar")
+    ) -> BiskyAgentController {
+        let controller = BiskyAgentController(organization: "suppy-demo", launch: launch, locale: "ar")
         controller.makeDriver = { [unowned self] _ in
             webs.append(FakeWebView())
             return webs[webs.count - 1]
@@ -162,17 +162,17 @@ final class PreloadTests: XCTestCase {
         }
     }
 
-    private func post(_ controller: HephonAgentController, _ json: String) {
-        controller.receive(json, isMainFrame: true, origin: hephon)
+    private func post(_ controller: BiskyAgentController, _ json: String) {
+        controller.receive(json, isMainFrame: true, origin: bisky)
     }
 
     /// The page in the web view says ready, listing the visibility capability unless `old`.
-    private func ready(_ controller: HephonAgentController, old: Bool = false) throws {
+    private func ready(_ controller: BiskyAgentController, old: Bool = false) throws {
         try post(controller, Fixture.page("ready", ["id": UUID().uuidString], in: old ? "bridge_v1" : preload))
     }
 
     /// The query of the chat URL once its token is spent: no token, the session's store.
-    private let relaunched: Set<String> = ["embed=ios", "sdk=\(HephonCommerceSDK.version)", "locale=ar", "store=branch-7"]
+    private let relaunched: Set<String> = ["embed=ios", "sdk=\(BiskySDK.version)", "locale=ar", "store=branch-7"]
 
     private func memoryWarning() {
         NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
@@ -230,10 +230,10 @@ final class PreloadTests: XCTestCase {
             post(controller, Fixture.json(message))
         }
         XCTAssertEqual(timings, [
-            HephonOpenTiming(open: 85, preloaded: true),
-            HephonOpenTiming(open: 40, preloaded: true),
-            HephonOpenTiming(open: nil, preloaded: true),
-            HephonOpenTiming(open: nil, preloaded: false),
+            BiskyOpenTiming(open: 85, preloaded: true),
+            BiskyOpenTiming(open: 40, preloaded: true),
+            BiskyOpenTiming(open: nil, preloaded: true),
+            BiskyOpenTiming(open: nil, preloaded: false),
         ])
     }
 
@@ -555,7 +555,7 @@ final class PreloadTests: XCTestCase {
         await until { self.webs[1].loads.count == 1 }
         XCTAssertEqual(
             webs[1].loads[0].absoluteString,
-            "\(hephon)/c/suppy-demo?lt=fresh%2Btoken&embed=ios&sdk=\(HephonCommerceSDK.version)&locale=ar"
+            "\(bisky)/c/suppy-demo?lt=fresh%2Btoken&embed=ios&sdk=\(BiskySDK.version)&locale=ar"
         )
         try ready(controller)
         await until { self.webs[1].delivered.count == 1 }
@@ -620,7 +620,7 @@ final class PreloadTests: XCTestCase {
         controller.preload()
         try ready(controller)
         // The page still has its session: no token is asked for, and none is sent.
-        webs[0].url = URL(string: "\(hephon)/c/suppy-demo?lt=token-1&view=support")
+        webs[0].url = URL(string: "\(bisky)/c/suppy-demo?lt=token-1&view=support")
         controller.reload()
         XCTAssertEqual(query(webs[0].loads[1]), ["view=support", "store=branch-7"])
         XCTAssertEqual(asked, 0)
@@ -631,7 +631,7 @@ final class PreloadTests: XCTestCase {
         await until { self.webs[0].loads.count == 3 }
         XCTAssertEqual(
             webs[0].loads[2].absoluteString,
-            "\(hephon)/c/suppy-demo?lt=fresh-1&embed=ios&sdk=\(HephonCommerceSDK.version)&locale=ar"
+            "\(bisky)/c/suppy-demo?lt=fresh-1&embed=ios&sdk=\(BiskySDK.version)&locale=ar"
         )
     }
 
@@ -796,7 +796,7 @@ final class PreloadTests: XCTestCase {
 final class PreloadWebKitTests: XCTestCase {
     func testLoadsOutsideAnyViewThenMovesIntoTheViewThatShowsIt() async throws {
         var events: [String] = []
-        let controller = HephonAgentController(organization: "suppy-demo")
+        let controller = BiskyAgentController(organization: "suppy-demo")
         controller.onTiming = { events.append("timing \($0.preloaded)") }
         controller.preload()
         let webView = controller.webView()
@@ -811,15 +811,15 @@ final class PreloadWebKitTests: XCTestCase {
         webView.loadHTMLString(
             """
             <script>
-            const post = (m) => window.webkit.messageHandlers.HephonBridge.postMessage(JSON.stringify(m));
-            window.hephon = { receive(json) {
+            const post = (m) => window.webkit.messageHandlers.BiskyBridge.postMessage(JSON.stringify(m));
+            window.bisky = { receive(json) {
                 const m = JSON.parse(json);
                 if (m.type === "visibility" && m.data.shown && m.data.at)
                     post({ v: 1, id: "t-" + m.id, type: "timing", ts: Date.now(),
                            data: { open: Date.now() - m.data.at, preloaded: true } });
             } };
-            window.webkit.messageHandlers.HephonBridge.postMessage(\(Fixture.json(painted)));
-            window.webkit.messageHandlers.HephonBridge.postMessage(\(Fixture.json(ready)));
+            window.webkit.messageHandlers.BiskyBridge.postMessage(\(Fixture.json(painted)));
+            window.webkit.messageHandlers.BiskyBridge.postMessage(\(Fixture.json(ready)));
             </script>
             """,
             baseURL: controller.url
@@ -828,7 +828,7 @@ final class PreloadWebKitTests: XCTestCase {
         await untilWebKit(seconds: 120) { controller.pageState == .loaded }
         XCTAssertEqual(events, [])
 
-        let sheet = HephonAgentViewController(controller: controller)
+        let sheet = BiskyAgentViewController(controller: controller)
         sheet.loadViewIfNeeded()
         sheet.beginAppearanceTransition(true, animated: false)
         sheet.endAppearanceTransition()
@@ -838,12 +838,12 @@ final class PreloadWebKitTests: XCTestCase {
         XCTAssertEqual(events, ["timing true"])
 
         // SwiftUI takes the view apart: the chat stays loaded, in the same web view.
-        HephonAgentView.dismantleUIViewController(sheet, coordinator: ())
+        BiskyAgentView.dismantleUIViewController(sheet, coordinator: ())
         XCTAssertNil(webView.superview)
         XCTAssertIdentical(controller.webView(), webView)
         XCTAssertEqual(controller.pageState, .loaded)
 
-        let again = HephonAgentViewController(controller: controller)
+        let again = BiskyAgentViewController(controller: controller)
         again.loadViewIfNeeded()
         again.beginAppearanceTransition(true, animated: false)
         again.endAppearanceTransition()
@@ -862,9 +862,9 @@ final class PreloadWebKitTests: XCTestCase {
     }
 
     /// A chat in a container, on screen, and how many times it began the wait to be released.
-    private func contained(preloaded: Bool) -> (Container, HephonAgentViewController, WKWebView, () -> Int) {
+    private func contained(preloaded: Bool) -> (Container, BiskyAgentViewController, WKWebView, () -> Int) {
         var waits = 0
-        let controller = HephonAgentController(organization: "suppy-demo")
+        let controller = BiskyAgentController(organization: "suppy-demo")
         controller.sleep = { _ in
             waits += 1
             try? await Task.sleep(nanoseconds: 60_000_000_000)
@@ -876,7 +876,7 @@ final class PreloadWebKitTests: XCTestCase {
         // Nothing from the network.
         webView.loadHTMLString("", baseURL: controller.url)
         let container = Container()
-        let sheet = HephonAgentViewController(controller: controller)
+        let sheet = BiskyAgentViewController(controller: controller)
         container.addChild(sheet)
         container.view.addSubview(sheet.view)
         sheet.didMove(toParent: container)

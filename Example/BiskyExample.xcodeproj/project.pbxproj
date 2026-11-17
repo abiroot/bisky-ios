@@ -9,13 +9,13 @@
 /* Begin PBXBuildFile section */
 		2A6D10F4B7C3E5A1908D4F62 /* Measure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4B7A12C5D8F3061B2A7C94 /* Measure.swift */; };
 		31C683F3E8852A31B08CEF6D /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE295AC53D521633F53487D /* ShopView.swift */; };
-		C56651DEE4C29404982A0CBA /* HephonCommerce in Frameworks */ = {isa = PBXBuildFile; productRef = 67678789CA50392E72E2EC45 /* HephonCommerce */; };
+		C56651DEE4C29404982A0CBA /* Bisky in Frameworks */ = {isa = PBXBuildFile; productRef = 67678789CA50392E72E2EC45 /* Bisky */; };
 		E88FA998895A59E213D4AE98 /* ExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723E3EE8DCDCEBC8F210B404 /* ExampleApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		28F27DDE1A0068643D4DEF22 /* HephonCommerceExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HephonCommerceExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		521FA25442DF25382B68A285 /* hephon-commerce-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "hephon-commerce-ios"; path = ..; sourceTree = SOURCE_ROOT; };
+		28F27DDE1A0068643D4DEF22 /* BiskyExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BiskyExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		521FA25442DF25382B68A285 /* bisky-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "bisky-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		723E3EE8DCDCEBC8F210B404 /* ExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleApp.swift; sourceTree = "<group>"; };
 		7C59EFD5DB084BA4D04C0F64 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9E4B7A12C5D8F3061B2A7C94 /* Measure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Measure.swift; sourceTree = "<group>"; };
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C56651DEE4C29404982A0CBA /* HephonCommerce in Frameworks */,
+				C56651DEE4C29404982A0CBA /* Bisky in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -37,7 +37,7 @@
 		2C39347757D73D895CB113E4 = {
 			isa = PBXGroup;
 			children = (
-				FF4F82272B48AA304D11F3E3 /* HephonCommerceExample */,
+				FF4F82272B48AA304D11F3E3 /* BiskyExample */,
 				5D1B7238C0932A56BD617328 /* Packages */,
 				4CE404B07798679AADA89FDE /* Products */,
 			);
@@ -46,7 +46,7 @@
 		4CE404B07798679AADA89FDE /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				28F27DDE1A0068643D4DEF22 /* HephonCommerceExample.app */,
+				28F27DDE1A0068643D4DEF22 /* BiskyExample.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -54,12 +54,12 @@
 		5D1B7238C0932A56BD617328 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				521FA25442DF25382B68A285 /* hephon-commerce-ios */,
+				521FA25442DF25382B68A285 /* bisky-ios */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
 		};
-		FF4F82272B48AA304D11F3E3 /* HephonCommerceExample */ = {
+		FF4F82272B48AA304D11F3E3 /* BiskyExample */ = {
 			isa = PBXGroup;
 			children = (
 				723E3EE8DCDCEBC8F210B404 /* ExampleApp.swift */,
@@ -67,15 +67,15 @@
 				9E4B7A12C5D8F3061B2A7C94 /* Measure.swift */,
 				CCE295AC53D521633F53487D /* ShopView.swift */,
 			);
-			path = HephonCommerceExample;
+			path = BiskyExample;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B9DA9F2566AAF3F66EEC8013 /* HephonCommerceExample */ = {
+		B9DA9F2566AAF3F66EEC8013 /* BiskyExample */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 67FA75053D7EAFBAD8D82DAF /* Build configuration list for PBXNativeTarget "HephonCommerceExample" */;
+			buildConfigurationList = 67FA75053D7EAFBAD8D82DAF /* Build configuration list for PBXNativeTarget "BiskyExample" */;
 			buildPhases = (
 				351DB892B939DCD572F7B684 /* Sources */,
 				1B4F53238375B817A3C8AF4C /* Frameworks */,
@@ -84,12 +84,12 @@
 			);
 			dependencies = (
 			);
-			name = HephonCommerceExample;
+			name = BiskyExample;
 			packageProductDependencies = (
-				67678789CA50392E72E2EC45 /* HephonCommerce */,
+				67678789CA50392E72E2EC45 /* Bisky */,
 			);
-			productName = HephonCommerceExample;
-			productReference = 28F27DDE1A0068643D4DEF22 /* HephonCommerceExample.app */;
+			productName = BiskyExample;
+			productReference = 28F27DDE1A0068643D4DEF22 /* BiskyExample.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -106,7 +106,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FD23A2FF0AD666CA907E8145 /* Build configuration list for PBXProject "HephonCommerceExample" */;
+			buildConfigurationList = FD23A2FF0AD666CA907E8145 /* Build configuration list for PBXProject "BiskyExample" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -123,7 +123,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B9DA9F2566AAF3F66EEC8013 /* HephonCommerceExample */,
+				B9DA9F2566AAF3F66EEC8013 /* BiskyExample */,
 			);
 		};
 /* End PBXProject section */
@@ -148,12 +148,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = HephonCommerceExample/Info.plist;
+				INFOPLIST_FILE = BiskyExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = ai.hephon.commerce.example;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.bisky.commerce.example;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -165,12 +165,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = HephonCommerceExample/Info.plist;
+				INFOPLIST_FILE = BiskyExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = ai.hephon.commerce.example;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.bisky.commerce.example;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -304,7 +304,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		67FA75053D7EAFBAD8D82DAF /* Build configuration list for PBXNativeTarget "HephonCommerceExample" */ = {
+		67FA75053D7EAFBAD8D82DAF /* Build configuration list for PBXNativeTarget "BiskyExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DF8765733674B1B2FC51B35 /* Debug */,
@@ -313,7 +313,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		FD23A2FF0AD666CA907E8145 /* Build configuration list for PBXProject "HephonCommerceExample" */ = {
+		FD23A2FF0AD666CA907E8145 /* Build configuration list for PBXProject "BiskyExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B783AAE4E6A7842FF0B99317 /* Debug */,
@@ -332,9 +332,9 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		67678789CA50392E72E2EC45 /* HephonCommerce */ = {
+		67678789CA50392E72E2EC45 /* Bisky */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = HephonCommerce;
+			productName = Bisky;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

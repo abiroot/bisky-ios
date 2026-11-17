@@ -1,16 +1,16 @@
-# HephonCommerce for iOS
+# Bisky for iOS
 
-Put the Hephon Commerce shopping agent in your iOS app. The agent runs in a `WKWebView` on
-the retailer's chat page; this package opens it for one shopper, keeps it on Hephon's
+Put the Bisky shopping agent in your iOS app. The agent runs in a `WKWebView` on
+the retailer's chat page; this package opens it for one shopper, keeps it on Bisky's
 origin, and turns everything it does to the basket into typed callbacks in **your own item
 ids**, so your app's cart and checkout stay in charge.
 
-- `HephonAgentController`: one chat for one shopper (launch token or code, callbacks, cart
+- `BiskyAgentController`: one chat for one shopper (launch token or code, callbacks, cart
   snapshot, appearance, text, messages and suggestions, focus). An `ObservableObject` with `@Published pageState`. Call
   `preload()` and the chat is loaded before the shopper taps, and stays loaded between opens.
-- `HephonAgentViewController`: the chat with loading and retry states. Presented, it is a
+- `BiskyAgentViewController`: the chat with loading and retry states. Presented, it is a
   full-height sheet with a grabber, or a full page with `presentation: .fullScreen`.
-- `HephonAgentView`: the same for SwiftUI, for `.sheet` or a screen of its own.
+- `BiskyAgentView`: the same for SwiftUI, for `.sheet` or a screen of its own.
 
 iOS 15 or later, Xcode 16 or later. No dependencies.
 
@@ -19,26 +19,26 @@ iOS 15 or later, Xcode 16 or later. No dependencies.
 **Xcode:** File > Add Package Dependencies, paste
 
 ```
-https://github.com/abiroot/hephon-commerce-ios.git
+https://github.com/abiroot/bisky-ios.git
 ```
 
-set Dependency Rule to **Up to Next Major Version** from `2.5.0`, and add `HephonCommerce`
+set Dependency Rule to **Up to Next Major Version** from `2.5.0`, and add `Bisky`
 to your app target.
 
 **Package.swift:**
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/abiroot/hephon-commerce-ios.git", from: "2.5.0"),
+    .package(url: "https://github.com/abiroot/bisky-ios.git", from: "2.5.0"),
 ],
 targets: [
     .target(name: "YourApp", dependencies: [
-        .product(name: "HephonCommerce", package: "hephon-commerce-ios"),
+        .product(name: "Bisky", package: "bisky-ios"),
     ]),
 ]
 ```
 
-The retailer's **Install** screen in Hephon shows the same steps with the latest version.
+The retailer's **Install** screen in Bisky shows the same steps with the latest version.
 
 ### Updates
 
@@ -77,13 +77,13 @@ controller.onMicrophonePermission = {
 UIKit:
 
 ```swift
-import HephonCommerce
+import Bisky
 import UIKit
 
 func openAssistant(from presenter: UIViewController) async throws {
     // Your server signs a fresh launch token for every open (see below).
-    let launchToken = try await api.hephonLaunchToken(store: "branch-7")
-    let controller = HephonAgentController(
+    let launchToken = try await api.biskyLaunchToken(store: "branch-7")
+    let controller = BiskyAgentController(
         organization: "your-retailer",
         launch: .token(launchToken),
         locale: "ar"
@@ -102,21 +102,21 @@ func openAssistant(from presenter: UIViewController) async throws {
     }
     controller.onCartCleared = { _ in cart.clear() }
     controller.onCheckout = { handoff in openCheckout(handoff) }
-    controller.onSessionExpired = { try await api.hephonLaunchToken(store: "branch-7") }
-    presenter.present(HephonAgentViewController(controller: controller), animated: true)
+    controller.onSessionExpired = { try await api.biskyLaunchToken(store: "branch-7") }
+    presenter.present(BiskyAgentViewController(controller: controller), animated: true)
 }
 ```
 
 SwiftUI:
 
 ```swift
-@State private var assistant: HephonAgentController?
+@State private var assistant: BiskyAgentController?
 
 Button("Ask the assistant") { assistant = makeController() }
-    .sheet(item: $assistant) { HephonAgentView(controller: $0) }
+    .sheet(item: $assistant) { BiskyAgentView(controller: $0) }
 ```
 
-`HephonAgentController` is `Identifiable`, so `.sheet(item:)` opens a fresh chat each time
+`BiskyAgentController` is `Identifiable`, so `.sheet(item:)` opens a fresh chat each time
 and clears `assistant` when the shopper closes it.
 
 Opened this way, each open needs a **new controller**: a launch token or code works once,
@@ -130,13 +130,13 @@ the shopper and the store, and load it before the tap:
 
 ```swift
 final class StoreViewController: UIViewController {
-    private let assistant: HephonAgentController
+    private let assistant: BiskyAgentController
 
     init(launchToken: String) {
-        assistant = HephonAgentController(organization: "your-retailer", launch: .token(launchToken))
+        assistant = BiskyAgentController(organization: "your-retailer", launch: .token(launchToken))
         super.init(nibName: nil, bundle: nil)
         // Required with preload(): also asked each time the chat loads again.
-        assistant.onSessionExpired = { try await api.hephonLaunchToken(store: "branch-7") }
+        assistant.onSessionExpired = { try await api.biskyLaunchToken(store: "branch-7") }
         assistant.onItemAdded = { event in /* as above */ }
     }
 
@@ -147,7 +147,7 @@ final class StoreViewController: UIViewController {
 
     func openAssistant() {
         assistant.sendCartSnapshot(cart.snapshot())
-        present(HephonAgentViewController(controller: assistant), animated: true)
+        present(BiskyAgentViewController(controller: assistant), animated: true)
     }
 }
 // On logout: assistant.dispose()
@@ -155,7 +155,7 @@ final class StoreViewController: UIViewController {
 
 In SwiftUI, hold the controller in your model, call `preload()` in `.onAppear` and when
 `scenePhase` becomes `.active`, and present it with
-`.sheet(item: $shown) { HephonAgentView(controller: $0) }`, setting `shown` to the same
+`.sheet(item: $shown) { BiskyAgentView(controller: $0) }`, setting `shown` to the same
 controller on every tap. `Example/` does exactly this.
 
 - **`preload()` loads the chat in a web view that is in no window**, and from then on
@@ -163,7 +163,7 @@ controller on every tap. `Example/` does exactly this.
   shows the same page: about 0.1 s on a simulator against a local server, where a chat
   made on the tap takes about 0.8 s.
 - **Call it where the assistant is likely to be opened**, `viewDidAppear` of the store
-  screen, not app start: each load costs a page render on Hephon and, with a launch token,
+  screen, not app start: each load costs a page render on Bisky and, with a launch token,
   a token from your server. Call it every time the screen appears and when your app comes
   back to the foreground. It does nothing while the chat is loaded, and nothing loads a
   released chat again by itself.
@@ -185,9 +185,9 @@ controller on every tap. `Example/` does exactly this.
   and a reply that is streaming when the sheet closes finishes while hidden and its cart
   events reach your app. On a device WebKit may suspend the web process of a web view
   that is in no window: such a reply can then stall until the chat is shown again and its
-  cart events can arrive late. It is never stopped, the basket on Hephon's server has the
+  cart events can arrive late. It is never stopped, the basket on Bisky's server has the
   items either way, and the signed webhook stays the source of truth.
-- `onTiming` gives `HephonOpenTiming(open:preloaded:)` every time the chat is shown:
+- `onTiming` gives `BiskyOpenTiming(open:preloaded:)` every time the chat is shown:
   `open` is the milliseconds from the view appearing to a usable chat (nil when the page
   could not confirm a frame), `preloaded` whether it was already loaded.
 
@@ -196,7 +196,7 @@ Retailers that cannot sign tokens open the session from their server with
 carry the locale you sent, so pass `locale:` too. With neither, pass `store:` for an
 anonymous chat (refused when the retailer requires launch tokens).
 
-The chat opens on `https://commerce.hephon.ai` unless you pass `host:`. A retailer whose
+The chat opens on `https://bisky.ai` unless you pass `host:`. A retailer whose
 chat also runs on its own domain passes that domain in `customDomains:`, so the web view
 keeps it in place.
 
@@ -215,7 +215,7 @@ All run on the main actor.
 | `onSessionExpired` | the chat session ended | return a fresh launch token to continue in place, or nil (a throw counts as nil, and the next expiry asks again). After three refused tokens in a row (asked again after 2 s and 4 s) the controller stops asking |
 | `onMicrophonePermission` | the chat wants the microphone for voice | return whether iOS granted it; anything else denies |
 | `onTiming` | the chat was shown and is usable | `open` in ms, `preloaded` |
-| `onStateChange` | the chat's screen, its busy state or its basket changed (since 2.2.0) | `HephonChatState`: `view` (`.welcome`, `.conversation`), `busy`, `basketOpen`, `itemCount`, `conversationId`, and since 2.5.0 `previousChats`, `memory` |
+| `onStateChange` | the chat's screen, its busy state or its basket changed (since 2.2.0) | `BiskyChatState`: `view` (`.welcome`, `.conversation`), `busy`, `basketOpen`, `itemCount`, `conversationId`, and since 2.5.0 `previousChats`, `memory` |
 | `onClose` | the shopper tapped the chat's back arrow (`showBack`) | nothing. Without it, the view closes itself (see Open it as a full page) |
 | `onLog` | a `debug` line (since 2.3.0, see Debugging) | the line, as text |
 
@@ -268,8 +268,8 @@ controller.sendCartSnapshot(cart.lines.map { CartSnapshotItem(itemId: $0.id, qua
 - `focus()`: puts the cursor in the message box. A hidden chat ignores it: call it after showing.
 - `reload()`: loads the chat again after `pageState == .failed` (the view's Try again does it).
 
-- `setAppearance(HephonAppearance(...))`: restyles the open chat, see Appearance below.
-- `setText(HephonText(...))`: changes the open chat's words, see Text below.
+- `setAppearance(BiskyAppearance(...))`: restyles the open chat, see Appearance below.
+- `setText(BiskyText(...))`: changes the open chat's words, see Text below.
 - `sendMessage`, `newChat`, `openBasket`, `closeBasket`, `openHistory`, `openMemory`, `setStarters`, `setLocale`,
   `setRestrictions`: steer the chat, see Control the chat below.
 
@@ -293,8 +293,8 @@ controller.openMemory()                    // while state.memory == true
 // The welcome screen's suggestions, in place of the retailer's (up to six). Tapping one sends
 // its prompt, or its label. An empty list brings the retailer's back.
 controller.setStarters([
-    HephonStarter(label: "Breakfast for 4"),
-    HephonStarter(label: "Iftar essentials", prompt: "I need everything for an iftar for 6 people"),
+    BiskyStarter(label: "Breakfast for 4"),
+    BiskyStarter(label: "Iftar essentials", prompt: "I need everything for an iftar for 6 people"),
 ])
 
 // The shopper changed your app's language while the chat is loaded.
@@ -310,7 +310,7 @@ controller.onStateChange = { state in
 }
 ```
 
-- `starters:` and `restrictions:` can also be passed to `HephonAgentController(...)`. Like
+- `starters:` and `restrictions:` can also be passed to `BiskyAgentController(...)`. Like
   text, they are sent once the chat is ready, never on the chat URL.
 - The last starters, restrictions and `setLocale` are sent again each time the chat loads
   again, so a reload keeps them. Messages, new chats and the basket are not.
@@ -318,12 +318,12 @@ controller.onStateChange = { state in
   nothing for what the chat would refuse: a message that is empty or over 2000 characters,
   more than six suggestions or one whose label is not 1 to 60 characters (`isValid`), a
   locale that is not a BCP 47 tag (`HostMessage.isLocale`).
-- `HephonRestriction` is `.alcohol`, `.alcoholFree`, `.pork` or `.tobacco`. What the retailer
+- `BiskyRestriction` is `.alcohol`, `.alcoholFree`, `.pork` or `.tobacco`. What the retailer
   excludes stays excluded whatever your app sends.
 - Starters, like appearance and text, are ignored when the retailer switched app changes off
   in **Configure**; `onReady`'s `capabilities` then does not list `"starters"`.
 - To draw your own first screen above the chat, open it with
-  `HephonAppearance(showWelcome: false)` and send what the shopper picks with `sendMessage`.
+  `BiskyAppearance(showWelcome: false)` and send what the shopper picks with `sendMessage`.
 
 ## Open it as a full page
 
@@ -331,23 +331,23 @@ The chat can take the whole screen, with its own back arrow instead of a sheet's
 Open it with `showBack: true` and keep the header (`showHeader` left as the retailer set it):
 
 ```swift
-let controller = HephonAgentController(
+let controller = BiskyAgentController(
     organization: "your-retailer",
     launch: .token(launchToken),
-    appearance: HephonAppearance(showBack: true)
+    appearance: BiskyAppearance(showBack: true)
 )
-presenter.present(HephonAgentViewController(controller: controller, presentation: .fullScreen), animated: true)
+presenter.present(BiskyAgentViewController(controller: controller, presentation: .fullScreen), animated: true)
 ```
 
 SwiftUI:
 
 ```swift
-.fullScreenCover(item: $assistant) { HephonAgentView(controller: $0) }
+.fullScreenCover(item: $assistant) { BiskyAgentView(controller: $0) }
 ```
 
 The back arrow posts `close`. When `onClose` is nil the view closes itself:
-`HephonAgentViewController` is dismissed (or popped, when you pushed it on a navigation
-controller) and `HephonAgentView` closes with SwiftUI's dismiss. Set `onClose` to close it
+`BiskyAgentViewController` is dismissed (or popped, when you pushed it on a navigation
+controller) and `BiskyAgentView` closes with SwiftUI's dismiss. Set `onClose` to close it
 your own way. Full screen, the chat starts below the status bar; its message box keeps clear
 of the home indicator.
 
@@ -357,10 +357,10 @@ Your app can restyle the chat it opens. Pass `appearance:` and the chat is drawn
 from its first paint:
 
 ```swift
-let controller = HephonAgentController(
+let controller = BiskyAgentController(
     organization: "your-retailer",
     launch: .token(launchToken),
-    appearance: HephonAppearance(scheme: .dark, primaryColor: "#1E1EF2", corners: .soft, header: .brand)
+    appearance: BiskyAppearance(scheme: .dark, primaryColor: "#1E1EF2", corners: .soft, header: .brand)
 )
 ```
 
@@ -368,7 +368,7 @@ While it is open, `setAppearance` changes only the fields you set, over what you
 before. What it set is sent again when the chat loads again, so a reload keeps it:
 
 ```swift
-controller.setAppearance(HephonAppearance(scheme: .light, showBasket: false))
+controller.setAppearance(BiskyAppearance(scheme: .light, showBasket: false))
 ```
 
 **Colors**, each `"#RRGGBB"`:
@@ -417,7 +417,7 @@ controller.setAppearance(HephonAppearance(scheme: .light, showBasket: false))
 | `showStarters` | the suggested first messages on the welcome screen |
 | `showWelcome` | the welcome screen's title, line and suggestions. `false` when your app draws its own first screen (since 2.2.0) |
 | `showBack` | a back arrow before the logo that closes the chat, for a chat opened as a full page (since 2.2.0) |
-| `showPoweredBy` | "Powered by Hephon"; takes effect only where Hephon allows the retailer to hide it (since 2.2.0) |
+| `showPoweredBy` | "Powered by Bisky"; takes effect only where Bisky allows the retailer to hide it (since 2.2.0) |
 | `hideOrderHelp` | `true` hides "Help with an order" |
 | `hideVoice` | `true` hides the microphone: voice messages and dictation |
 | `hideCall` | `true` hides the live voice call |
@@ -425,12 +425,12 @@ controller.setAppearance(HephonAppearance(scheme: .light, showBasket: false))
 The last three are named `hide` because that is all an app can do with them: what the
 retailer has switched off stays off.
 
-Every field is optional: one you leave out keeps what the retailer set in Hephon. A color
-that is not `#RRGGBB` stops a debug build in `HephonAppearance.init` (`assertionFailure`),
+Every field is optional: one you leave out keeps what the retailer set in Bisky. A color
+that is not `#RRGGBB` stops a debug build in `BiskyAppearance.init` (`assertionFailure`),
 so a typo shows the first time the code runs. A release build never crashes on one: it
-drops that color and the chat keeps the retailer's. `HephonAppearance.isColor(_:)` checks
+drops that color and the chat keeps the retailer's. `BiskyAppearance.isColor(_:)` checks
 a color that comes from outside your code. A `fontFamily` that is not a typeface name is
-treated the same way, and `HephonAppearance.isFontFamily(_:)` checks one.
+treated the same way, and `BiskyAppearance.isFontFamily(_:)` checks one.
 
 The retailer can switch app changes off in **Configure**. The chat then ignores both the
 option and `setAppearance`, and `onReady`'s `capabilities` does not list `"appearance"`.
@@ -440,17 +440,17 @@ option and `setAppearance`, and `onReady`'s `capabilities` does not list `"appea
 Your app can change the chat's words, at open or while it is open:
 
 ```swift
-let controller = HephonAgentController(
+let controller = BiskyAgentController(
     organization: "your-retailer",
     launch: .token(launchToken),
-    text: HephonText(
+    text: BiskyText(
         welcomeTitle: "What can we get you?",
         placeholder: "Ask Suppy",
         labels: .init(viewBasket: "View cart", checkout: "Go to checkout")
     )
 )
 
-controller.setText(HephonText(labels: .init(addToBasket: "Add to cart")))
+controller.setText(BiskyText(labels: .init(addToBasket: "Add to cart")))
 ```
 
 | Field | Where |
@@ -473,14 +473,14 @@ When the retailer has switched app changes off in **Configure**, the chat ignore
 ## Launch tokens
 
 Your server signs a short-lived JWT with an Ed25519 private key. Register the public key
-(JWK) in Hephon on the **Install** screen, under launch tokens. Never ship the private key in the app.
+(JWK) in Bisky on the **Install** screen, under launch tokens. Never ship the private key in the app.
 
-Header: `{ "alg": "EdDSA", "typ": "hephon-launch+jwt", "kid": "<your key id>" }`.
+Header: `{ "alg": "EdDSA", "typ": "bisky-launch+jwt", "kid": "<your key id>" }`.
 
 | Claim | Value |
 |---|---|
 | `iss` | your partner slug, or the retailer's slug |
-| `aud` | `hephon:<retailer slug>` |
+| `aud` | `bisky:<retailer slug>` |
 | `sub` | your shopper id (optional, never an email or phone; `wa:` is reserved) |
 | `hsid` | your app's session id (optional, echoed in cart events and checkout) |
 | `store` | the store (branch) id the chat opens in |
@@ -493,7 +493,7 @@ The Install screen has the signing code for Node, and the Flutter package's READ
 ## Security
 
 - The bridge handler is added before the first load, in the page's content world. A message
-  counts only from the main frame on the Hephon host or a custom domain you passed.
+  counts only from the main frame on the Bisky host or a custom domain you passed.
 - Messages to the chat go through `callAsyncJavaScript` with arguments (never string
   concatenation), and only while the web view shows the chat.
 - The web view shows only the chat (`/c/<organization>`). Every other link, including the
@@ -510,11 +510,11 @@ The Install screen has the signing code for Node, and the Flutter package's READ
 When a tap or a message seems to go nowhere, open the chat with `debug: true` (since 2.3.0):
 
 ```swift
-let assistant = HephonAgentController(
+let assistant = BiskyAgentController(
     organization: "noknok",
     launch: .token(token),
     debug: true,
-    onLog: { line in print("hephon: \(line)") }
+    onLog: { line in print("bisky: \(line)") }
 )
 ```
 
@@ -524,7 +524,7 @@ press and what was under it, requests with their status and time, chat turns, th
 checkout, uncaught errors):
 
 ```
-load https://commerce.hephon.ai/c/noknok?lt=%E2%80%A6&embed=ios&sdk=2.5.0&debug=1
+load https://bisky.ai/c/noknok?lt=%E2%80%A6&embed=ios&sdk=2.5.0&debug=1
 -> basket.open 6f1c… held until the chat is ready
 <- ready a0c6…
 page info: press (touch) button "Check out" at 186,812
@@ -532,8 +532,8 @@ page info: press (touch) button "Check out" at 186,812
 onCheckout: 2 items, total 21.25 USD, conversation cm1…
 ```
 
-Without `onLog` the lines go to the system log (subsystem `ai.hephon.commerce`, category
-`HephonCommerce`), visible in Xcode's console and Console.app. The web view also opens in
+Without `onLog` the lines go to the system log (subsystem `ai.bisky.commerce`, category
+`Bisky`), visible in Xcode's console and Console.app. The web view also opens in
 Safari's Web Inspector (Develop menu, iOS 16.4+). Launch tokens, codes and what the shopper
 wrote are never logged. Leave it off in release builds unless you are tracing a problem.
 
@@ -543,10 +543,10 @@ wrote are never logged. Leave it off in release builds unless you are tracing a 
   opens one chat for 5 minutes. Pass it as `.code("...")`, ask the assistant for milk and add
   it: your `onItemAdded` runs, and the Install screen shows your app and its version.
 - `Example/` is a small SwiftUI app that loads the chat ahead, keeps it between opens and
-  lists every event with its open time. Open `Example/HephonCommerceExample.xcodeproj`, run
+  lists every event with its open time. Open `Example/BiskyExample.xcodeproj`, run
   it on a simulator, and paste a test code.
-- `xcodebuild test -scheme HephonCommerce -destination 'platform=iOS Simulator,name=iPhone 17'`
-  runs the contract tests (the bridge, host, appearance, control and debug fixtures every Hephon SDK shares) and the
+- `xcodebuild test -scheme Bisky -destination 'platform=iOS Simulator,name=iPhone 17'`
+  runs the contract tests (the bridge, host, appearance, control and debug fixtures every Bisky SDK shares) and the
   controller tests.
 - On an iOS 18.4 to 18.x simulator, an app whose deployment target is older than the
   simulator's iOS stops at launch with `Library not loaded: /usr/lib/swift/libswiftWebKit.dylib`.

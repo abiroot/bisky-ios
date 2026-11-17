@@ -1,7 +1,7 @@
 import Foundation
 
 /// What the chat's web view does with a navigation.
-public enum HephonNavigation: String, Sendable {
+public enum BiskyNavigation: String, Sendable {
     /// The chat page: load it in the web view.
     case allow
     /// Anything else the shopper tapped: open it in the browser or the app it belongs to
@@ -11,7 +11,7 @@ public enum HephonNavigation: String, Sendable {
     case block
 
     /// The web view shows only the chat: `chatPath` (`/c/<organization>`) and the paths under
-    /// it, in the main frame, on `allowedOrigins` (the Hephon host and any custom domain).
+    /// it, in the main frame, on `allowedOrigins` (the Bisky host and any custom domain).
     /// That keeps the chat in place when the shopper taps one of its own links: every other
     /// page of those origins (the chat footer's `/legal/privacy`) opens outside the app.
     ///
@@ -23,7 +23,7 @@ public enum HephonNavigation: String, Sendable {
         isMainFrame: Bool,
         allowedOrigins: Set<String>,
         chatPath: String
-    ) -> HephonNavigation {
+    ) -> BiskyNavigation {
         let scheme = url.scheme?.lowercased() ?? ""
         if scheme == "about" {
             return .allow

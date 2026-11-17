@@ -1,5 +1,5 @@
 import Foundation
-@testable import HephonCommerce
+@testable import Bisky
 import WebKit
 import XCTest
 
@@ -10,7 +10,7 @@ import XCTest
 final class WebKitHostTests: XCTestCase {
     func testTalksToAPageOnTheChatOrigin() async throws {
         var events: [String] = []
-        let controller = HephonAgentController(organization: "suppy-demo", launch: .code("abc"))
+        let controller = BiskyAgentController(organization: "suppy-demo", launch: .code("abc"))
         controller.onReady = { [weak controller] _ in
             events.append("ready")
             controller?.focus()
@@ -27,13 +27,13 @@ final class WebKitHostTests: XCTestCase {
         webView.loadHTMLString(
             """
             <script>
-            const post = (m) => window.webkit.messageHandlers.HephonBridge.postMessage(JSON.stringify(m));
-            window.hephon = { receive(json) {
+            const post = (m) => window.webkit.messageHandlers.BiskyBridge.postMessage(JSON.stringify(m));
+            window.bisky = { receive(json) {
                 const m = JSON.parse(json);
                 post({ v: 1, id: "echo-" + m.id, type: "open_product", ts: Date.now(),
                        data: { itemId: m.type, catalogId: m.type, storeId: "branch-7" } });
             } };
-            window.webkit.messageHandlers.HephonBridge.postMessage(\(Fixture.json(ready)));
+            window.webkit.messageHandlers.BiskyBridge.postMessage(\(Fixture.json(ready)));
             </script>
             """,
             baseURL: controller.url
@@ -44,7 +44,7 @@ final class WebKitHostTests: XCTestCase {
 
         controller.dispose()
         var bridge: String?
-        evaluate("typeof window.webkit?.messageHandlers?.HephonBridge", in: webView) { bridge = $0 }
+        evaluate("typeof window.webkit?.messageHandlers?.BiskyBridge", in: webView) { bridge = $0 }
         await untilWebKit { bridge != nil }
         XCTAssertEqual(bridge, "undefined")
     }

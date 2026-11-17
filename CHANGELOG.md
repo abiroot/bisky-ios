@@ -1,12 +1,27 @@
+## 2.6.0
+
+Words per language, and the view's own words in Arabic and French. Renamed to Bisky: a new package name, and the public types are `Bisky*` (formerly `Hephon*`),
+so imports and type names change; apart from that, nothing that worked in 2.5.0 changed.
+
+- **Renamed to Bisky**: the package is `https://github.com/abiroot/bisky-ios` (formerly
+  `hephon-commerce-ios`, which GitHub redirects), module `Bisky`.
+- **`BiskyText.locale`**: the language a set of words is for (`ar-AE`, `en`). The controller
+  keeps one set per language and sends them all each time the chat loads; the chat shows the set
+  for the language it is in. Words without a locale are for your app's language, as before.
+  `setText` now returns false, and keeps nothing, for a locale that is not a tag.
+- **`BiskyAgentController.locale`** and **`BiskyAgentViewController.words`**
+  (`BiskyViewWords`): the "couldn't open" screen in English, Arabic or French from the chat's
+  locale, else the device's; set your own to replace them.
+
 ## 2.5.0
 
 Previous chats and What I remember from your own header. Nothing that worked in 2.4.0 changed:
 updating needs no code change.
 
-- **`openHistory()` and `openMemory()`** on `HephonAgentController` open the chat's "Previous chats"
+- **`openHistory()` and `openMemory()`** on `BiskyAgentController` open the chat's "Previous chats"
   and "What I remember" from your own header, for an app that hides the chat's (whose menu holds
   them).
-- **`HephonChatState.previousChats` and `HephonChatState.memory`** say whether to show those
+- **`BiskyChatState.previousChats` and `BiskyChatState.memory`** say whether to show those
   buttons: earlier chats to list, and whether the retailer remembers shoppers. Nil from a page
   older than 2.5.0.
 
@@ -14,7 +29,7 @@ updating needs no code change.
 
 Previous chats. Nothing that worked in 2.3.0 changed: updating needs no code change.
 
-- `HephonAppearance(showHistory:)`: "Previous chats" in the chat's header menu, listing the
+- `BiskyAppearance(showHistory:)`: "Previous chats" in the chat's header menu, listing the
   shopper's chats in this store from the last 30 days (a signed-in shopper's on any device, an
   anonymous one's in the same app). Like the other `show*` flags it switches the retailer's
   setting on or off for your screen; `nil` leaves it to the retailer's setting (off by default).
@@ -24,14 +39,14 @@ Previous chats. Nothing that worked in 2.3.0 changed: updating needs no code cha
 Debug mode, for finding where a tap or a message stops. Nothing that worked in 2.2.0 changed:
 updating needs no code change.
 
-- `HephonAgentController(..., debug: true)` logs what the chat does: page loads and load
+- `BiskyAgentController(..., debug: true)` logs what the chat does: page loads and load
   errors, the chat shown, hidden and released, every bridge message both ways (its type and
   id, `-> basket.open <id>`, `<- checkout <id>`), each of your callbacks as it is
   called (`onCheckout: 2 items, total 21.25 USD, conversation <id>`), and the page's own
   trace: each press and click and what was under it, every request with its status and time,
   chat turns, the basket, checkout and uncaught errors (`page info: ...`).
 - Lines go to `onLog` (an `init` argument and a property, like the other callbacks), or to the
-  system log without it (subsystem `ai.hephon.commerce`, category `HephonCommerce`, level
+  system log without it (subsystem `ai.bisky.commerce`, category `Bisky`, level
   info). Nothing is logged with `debug` off, the default.
 - The chat URL gets `debug=1`, and the web view is inspectable in Safari's Web Inspector
   (iOS 16.4+) in any build.
@@ -47,26 +62,26 @@ Updating from 2.1.0 needs no code change.
   own suggestions or an "Ask about this" button); `newChat()` starts a new conversation;
   `openBasket()` and `closeBasket()` open and close the chat's basket.
 - `setStarters(_:)` and the `starters:` option: the welcome screen's suggestions, up to six
-  `HephonStarter(label:prompt:)`, in place of the retailer's. An empty list brings the
+  `BiskyStarter(label:prompt:)`, in place of the retailer's. An empty list brings the
   retailer's back. Ignored when the retailer switched app changes off.
 - `setLocale(_:)`: the chat's language when the shopper changes your app's language while the
   chat is loaded (its own words, and the reply language for a message that could be either).
 - `setRestrictions(_:)` and the `restrictions:` option: kinds of product this chat never shows
-  (`HephonRestriction`: `.alcohol`, `.alcoholFree`, `.pork`, `.tobacco`), added to the
+  (`BiskyRestriction`: `.alcohol`, `.alcoholFree`, `.pork`, `.tobacco`), added to the
   retailer's. An app can never show what the retailer hides.
 - The last starters, restrictions and `setLocale` are sent again each time the chat loads
   again, like appearance and text, so a reload keeps them.
-- `onStateChange`: a `HephonChatState` whenever the chat changes: `view` (`.welcome` or
+- `onStateChange`: a `BiskyChatState` whenever the chat changes: `view` (`.welcome` or
   `.conversation`), `busy`, `basketOpen`, `itemCount` and `conversationId`.
-- `HephonAppearance`: three more flags, 39 in all. `showWelcome` (the welcome title, line and
+- `BiskyAppearance`: three more flags, 39 in all. `showWelcome` (the welcome title, line and
   suggestions: set it false when your app draws its own first screen), `showBack` (a back
-  arrow before the logo that closes the chat), `showPoweredBy` ("Powered by Hephon", where
-  Hephon allows the retailer to hide it).
-- Full page: `HephonAgentViewController(controller:presentation: .fullScreen)` covers the
-  screen with no grabber, the chat below the status bar. In SwiftUI, present `HephonAgentView`
+  arrow before the logo that closes the chat), `showPoweredBy` ("Powered by Bisky", where
+  Bisky allows the retailer to hide it).
+- Full page: `BiskyAgentViewController(controller:presentation: .fullScreen)` covers the
+  screen with no grabber, the chat below the status bar. In SwiftUI, present `BiskyAgentView`
   with `.fullScreenCover`.
-- The back arrow posts `close`. With no `onClose`, `HephonAgentViewController` closes itself
-  (dismissed, or popped when pushed on a navigation controller) and `HephonAgentView` closes
+- The back arrow posts `close`. With no `onClose`, `BiskyAgentViewController` closes itself
+  (dismissed, or popped when pushed on a navigation controller) and `BiskyAgentView` closes
   with SwiftUI's dismiss. Set `onClose` to close it your own way.
 - `sendMessage`, `setStarters` and `setLocale` return false, and send nothing, for what the
   chat would refuse: an empty message or one over 2000 characters, more than six suggestions
@@ -101,14 +116,14 @@ Breaking:
 
 Added:
 
-- `HephonAppearance`: 12 more optional overrides, 36 in all.
+- `BiskyAppearance`: 12 more optional overrides, 36 in all.
   - colors (`"#RRGGBB"`): `cardColor` (product cards, the basket, the product sheet and
     menus), `textColor` (replies, titles, prices), `mutedColor` (small print), `lineColor`
     (the outlines of cards, chips and the message box).
   - `fontFamily`: a typeface the device already has, like `"Avenir Next"`, ahead of
     `font`. 1 to 40 letters, digits, spaces, dots, dashes or underscores. A name that is
     not one stops a debug build (`assertionFailure`) and is dropped in a release build,
-    like a bad color. `HephonAppearance.isFontFamily(_:)` checks one.
+    like a bad color. `BiskyAppearance.isFontFamily(_:)` checks one.
   - what is shown: `showBasketButton` (the basket button in the header), `showBasketBar`
     (the summary bar above the message box: an app with its own cart bar sets it false;
     `showBasket` still hides the whole basket), `showAssistantName` (the name above each
@@ -116,13 +131,13 @@ Added:
   - what an app can only hide: `hideOrderHelp` ("Help with an order"), `hideVoice` (the
     microphone: voice messages and dictation) and `hideCall` (the live voice call). `true`
     hides the part; what the retailer has switched off stays off.
-- `HephonText`: `assistantName` (the name in the header and above each reply, up to 40
+- `BiskyText`: `assistantName` (the name in the header and above each reply, up to 40
   characters), and five more labels: `total`, `emptyBasket`, `thinking`, `typing`,
   `tryAgain`.
 
 ## 1.2.0
 
-- `HephonAppearance`: your app can restyle the chat it opens. 24 optional overrides, and
+- `BiskyAppearance`: your app can restyle the chat it opens. 24 optional overrides, and
   one you leave out keeps what the retailer set:
   - colors (`"#RRGGBB"`): `primaryColor`, `deepColor`, `accentColor`, `dealColor`,
     `ctaColor`, `headerColor`, `bubbleColor`, `surfaceColor`.
@@ -133,24 +148,24 @@ Added:
   - what is shown (`true` or `false`): `showHeader`, `showLogo`, `showBasket`,
     `showCheckout`, `showNewChat`, `showFollowUps`, `showSteps`, `productSheet`,
     `addFromCards`.
-- `HephonAgentController(appearance:)`: the chat is drawn restyled from its first paint.
+- `BiskyAgentController(appearance:)`: the chat is drawn restyled from its first paint.
   The overrides are part of the chat URL, so a reload and a chat that loads again after
   it was released keep them. `chatURL` takes `appearance:` too.
 - `setAppearance(_:)`: restyles the open chat. Only the fields that are set change, over
   what your app sent before. Held until the chat is ready, like every message, and sent
   again when the chat loads again. `HostMessage` has `.appearance`.
-- A color that is not `#RRGGBB` stops a debug build in `HephonAppearance.init`
+- A color that is not `#RRGGBB` stops a debug build in `BiskyAppearance.init`
   (`assertionFailure`). A release build drops that color and keeps the rest.
-  `HephonAppearance.isColor(_:)` checks one.
-- `HephonText`: your app can change the chat's words: `welcomeTitle`, `welcomeSubtitle`,
+  `BiskyAppearance.isColor(_:)` checks one.
+- `BiskyText`: your app can change the chat's words: `welcomeTitle`, `welcomeSubtitle`,
   `placeholder`, `tagline` and `labels` (`viewBasket`, `basketTitle`, `checkout`,
-  `addToBasket`, `orderHelp`, `newChat`). Pass it as `HephonAgentController(text:)` or
+  `addToBasket`, `orderHelp`, `newChat`). Pass it as `BiskyAgentController(text:)` or
   to `setText(_:)`, which changes only what is set, the labels one by one. Text is sent
   as a message once the chat is ready, never on the chat URL, and again each time the
   chat loads again. `HostMessage` has `.text`.
 - The retailer can switch app changes off in Configure. The chat then ignores appearance
   and text, and its `ready` lists neither the `appearance` nor the `text` capability.
-- `setTheme` and `HephonScheme` are unchanged: code written for 1.1.0 needs no change.
+- `setTheme` and `BiskyScheme` are unchanged: code written for 1.1.0 needs no change.
 
 ## 1.1.0
 
@@ -158,13 +173,13 @@ Added:
   one controller for a shopper and a store and call `preload()` in `viewDidAppear` of
   your store screen; the assistant then opens at once.
 - A controller that was preloaded stays loaded between opens: dismissing
-  `HephonAgentViewController` or `HephonAgentView` hides the chat instead of disposing
+  `BiskyAgentViewController` or `BiskyAgentView` hides the chat instead of disposing
   the controller. Call `dispose()` on logout. A controller that was never preloaded
   behaves as in 1.0.0: it loads when shown and is disposed on dismiss.
 - A hidden chat is released after 10 minutes and on a memory warning, and loads again
   on the next `preload()` or open. When iOS ends its web process while it is hidden, it
   loads again then too, without a retry screen.
-- `onTiming`: `HephonOpenTiming(open:preloaded:)` each time the chat is shown, with
+- `onTiming`: `BiskyOpenTiming(open:preloaded:)` each time the chat is shown, with
   the milliseconds from the view appearing to a usable chat.
 - The loading indicator hides when the chat is first drawn, not when the page has
   finished loading.
@@ -180,22 +195,22 @@ Added:
 
 ## 1.0.0
 
-- First release: `HephonAgentController`, `HephonAgentViewController` (UIKit, a
-  full-height sheet with a grabber) and `HephonAgentView` (SwiftUI), on WKWebView.
+- First release: `BiskyAgentController`, `BiskyAgentViewController` (UIKit, a
+  full-height sheet with a grabber) and `BiskyAgentView` (SwiftUI), on WKWebView.
   iOS 15 or later, Xcode 16 or later, Swift 6 strict concurrency.
 - Installs with Swift Package Manager from
-  `https://github.com/abiroot/hephon-commerce-ios.git`, Dependency Rule "Up to Next
+  `https://github.com/abiroot/bisky-ios.git`, Dependency Rule "Up to Next
   Major Version" from 1.0.0.
 - Bridge envelope v1: typed callbacks for cart changes (added, updated, removed,
   cleared), checkout, handoff to a person, product opened, session renewal and close;
   cart snapshot, theme and focus from the app. Events are deduplicated by message id,
   and messages sent before the chat is ready are held until it is.
-- Only the chat's main frame on the Hephon host or your custom domains can post to
+- Only the chat's main frame on the Bisky host or your custom domains can post to
   the app. The web view shows only the chat (`/c/<organization>`); other links, the
   chat's privacy page included, open outside the app.
 - The microphone is granted to the chat only when `onMicrophonePermission` returns
   true; anything else, or a throw, denies it. Spoken replies play inline without a tap.
 - `onSessionExpired` renews the session in place. A throw counts as nil; after three
   refused tokens in a row (asked again after 2 s and 4 s) the controller stops asking.
-- The chat URL carries `sdk=1.0.0` (`HephonCommerceSDK.version`), so the retailer's
+- The chat URL carries `sdk=1.0.0` (`BiskySDK.version`), so the retailer's
   Install screen shows which version your app runs and when an update is out.

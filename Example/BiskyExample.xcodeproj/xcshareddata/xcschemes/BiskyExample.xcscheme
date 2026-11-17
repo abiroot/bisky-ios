@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B9DA9F2566AAF3F66EEC8013"
-               BuildableName = "HephonCommerceExample.app"
-               BlueprintName = "HephonCommerceExample"
-               ReferencedContainer = "container:HephonCommerceExample.xcodeproj">
+               BuildableName = "BiskyExample.app"
+               BlueprintName = "BiskyExample"
+               ReferencedContainer = "container:BiskyExample.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B9DA9F2566AAF3F66EEC8013"
-            BuildableName = "HephonCommerceExample.app"
-            BlueprintName = "HephonCommerceExample"
-            ReferencedContainer = "container:HephonCommerceExample.xcodeproj">
+            BuildableName = "BiskyExample.app"
+            BlueprintName = "BiskyExample"
+            ReferencedContainer = "container:BiskyExample.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -56,9 +56,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B9DA9F2566AAF3F66EEC8013"
-            BuildableName = "HephonCommerceExample.app"
-            BlueprintName = "HephonCommerceExample"
-            ReferencedContainer = "container:HephonCommerceExample.xcodeproj">
+            BuildableName = "BiskyExample.app"
+            BlueprintName = "BiskyExample"
+            ReferencedContainer = "container:BiskyExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -75,9 +75,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B9DA9F2566AAF3F66EEC8013"
-            BuildableName = "HephonCommerceExample.app"
-            BlueprintName = "HephonCommerceExample"
-            ReferencedContainer = "container:HephonCommerceExample.xcodeproj">
+            BuildableName = "BiskyExample.app"
+            BlueprintName = "BiskyExample"
+            ReferencedContainer = "container:BiskyExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

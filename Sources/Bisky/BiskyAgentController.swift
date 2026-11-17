@@ -7,13 +7,13 @@ import WebKit
 /// How the chat opens for one shopper: a launch token your server signs, or a code from
 /// `POST /v1/sessions`. Either works once. Pass nil for an anonymous chat in `store`
 /// (refused when the retailer requires a launch token).
-public enum HephonLaunch: Sendable, Equatable {
+public enum BiskyLaunch: Sendable, Equatable {
     case token(String)
     case code(String)
 }
 
 /// Where the chat page is in loading.
-public enum HephonPageState: Sendable, Equatable {
+public enum BiskyPageState: Sendable, Equatable {
     /// The page is loading.
     case loading
     /// The page loaded. The bridge may still be getting ready.
@@ -22,10 +22,10 @@ public enum HephonPageState: Sendable, Equatable {
     case failed
 }
 
-/// Runs one Hephon chat in a web view and turns its bridge messages into typed callbacks.
+/// Runs one Bisky chat in a web view and turns its bridge messages into typed callbacks.
 ///
 /// Keep one controller for a shopper and a store, call `preload()` when your store screen
-/// appears, and show it with `HephonAgentViewController` (UIKit) or `HephonAgentView`
+/// appears, and show it with `BiskyAgentViewController` (UIKit) or `BiskyAgentView`
 /// (SwiftUI) as often as you like: the chat is loaded before the tap and stays loaded between
 /// opens. Call `dispose()` on logout.
 ///
@@ -33,9 +33,9 @@ public enum HephonPageState: Sendable, Equatable {
 /// dismissing the view disposes it. Callbacks that use the controller capture it weakly:
 /// `controller.onReady = { [weak controller] _ in controller?.sendCartSnapshot([]) }`.
 @MainActor
-public final class HephonAgentController: ObservableObject {
-    /// Hephon's production host.
-    public nonisolated static let defaultHost = URL(string: "https://commerce.hephon.ai")!
+public final class BiskyAgentController: ObservableObject {
+    /// Bisky's production host.
+    public nonisolated static let defaultHost = URL(string: "https://bisky.ai")!
 
     /// The chat page URL this controller opens.
     public let url: URL
@@ -43,8 +43,8 @@ public final class HephonAgentController: ObservableObject {
     /// Origins the web view may show: the host and the custom domains.
     public let allowedOrigins: Set<String>
 
-    /// Loading, loaded or failed: what `HephonAgentViewController` shows over the page.
-    @Published public private(set) var pageState: HephonPageState = .loading
+    /// Loading, loaded or failed: what `BiskyAgentViewController` shows over the page.
+    @Published public private(set) var pageState: BiskyPageState = .loading
 
     /// Lets Safari's Web Inspector attach (iOS 16.4+). On in debug builds and with `debug`. Set
     /// it before the view appears.
@@ -57,7 +57,7 @@ public final class HephonAgentController: ObservableObject {
     }()
 
     /// The chat said `ready`.
-    public var onReady: (@MainActor (HephonReady) -> Void)?
+    public var onReady: (@MainActor (BiskyReady) -> Void)?
     /// A line was added to the basket (by the agent, the shopper or you).
     public var onItemAdded: (@MainActor (CartItemEvent) -> Void)?
     /// A line's quantity changed.
@@ -69,7 +69,7 @@ public final class HephonAgentController: ObservableObject {
     /// The shopper tapped checkout: open your checkout with this cart.
     public var onCheckout: (@MainActor (CartHandoff) -> Void)?
     /// The agent handed the conversation to a person.
-    public var onHandoff: (@MainActor (HephonHandoff) -> Void)?
+    public var onHandoff: (@MainActor (BiskyHandoff) -> Void)?
     /// The shopper opened a product.
     public var onOpenProduct: (@MainActor (OpenProduct) -> Void)?
     /// The chat session ended (expired or revoked). Return a fresh launch token from your
@@ -84,7 +84,7 @@ public final class HephonAgentController: ObservableObject {
     /// after 2 s and 4 s, and after three refused tokens in a row it stops asking.
     public var onSessionExpired: (@MainActor () async throws -> String?)?
     /// The chat asked to close: the shopper tapped its back arrow (`showBack`). When nil,
-    /// `HephonAgentViewController` and `HephonAgentView` close themselves; set it to close the
+    /// `BiskyAgentViewController` and `BiskyAgentView` close themselves; set it to close the
     /// chat your own way.
     public var onClose: (@MainActor () -> Void)?
     /// The page wants the microphone for voice. Ask iOS (`NSMicrophoneUsageDescription` in
@@ -92,10 +92,10 @@ public final class HephonAgentController: ObservableObject {
     /// microphone is refused and the chat stays text only.
     public var onMicrophonePermission: (@MainActor () async throws -> Bool)?
     /// How long the chat took to open, each time it is shown.
-    public var onTiming: (@MainActor (HephonOpenTiming) -> Void)?
+    public var onTiming: (@MainActor (BiskyOpenTiming) -> Void)?
     /// What the chat is doing changed: its screen, whether a reply is on its way, the basket
     /// and its item count. Since 2.2.0.
-    public var onStateChange: (@MainActor (HephonChatState) -> Void)?
+    public var onStateChange: (@MainActor (BiskyChatState) -> Void)?
     /// Receives each `debug` line instead of the system log, for your own logger. Since 2.3.0.
     public var onLog: (@MainActor (String) -> Void)?
 
@@ -119,8 +119,8 @@ public final class HephonAgentController: ObservableObject {
     /// A hidden chat is released after this long.
     var idleRelease: TimeInterval = 600
     /// Makes the web view; tests replace it.
-    var makeDriver: @MainActor (HephonAgentController) -> any WebViewDriving = { WebKitHost(controller: $0) }
-    var warn: @MainActor (String) -> Void = { message in HephonAgentController.log.warning("\(message, privacy: .public)") }
+    var makeDriver: @MainActor (BiskyAgentController) -> any WebViewDriving = { WebKitHost(controller: $0) }
+    var warn: @MainActor (String) -> Void = { message in BiskyAgentController.log.warning("\(message, privacy: .public)") }
     /// Waits between renewals and before an idle release; tests replace it.
     var sleep: @MainActor (TimeInterval) async -> Void = { seconds in
         try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
@@ -135,13 +135,17 @@ public final class HephonAgentController: ObservableObject {
     private var outbox: [HostMessage] = []
     /// Everything `setAppearance` sent, merged: a page loaded later is told again. What the
     /// app passed at open is on the chat URL.
-    private var keptAppearance: HephonAppearance?
+    private var keptAppearance: BiskyAppearance?
     /// The text passed at open and everything `setText` sent, merged, for a page loaded later.
-    private var keptText: HephonText?
+    private var keptTexts: [String: BiskyText] = [:]
+    /// The locales of `keptTexts` in the order they were first set ("" for none).
+    private var keptTextOrder: [String] = []
+    /// The locale passed at open.
+    private let openedLocale: String?
     /// The last suggestions set (at open or with `setStarters`), for a page loaded later.
-    private var keptStarters: [HephonStarter]?
+    private var keptStarters: [BiskyStarter]?
     /// The last restrictions set (at open or with `setRestrictions`), for a page loaded later.
-    private var keptRestrictions: [HephonRestriction]?
+    private var keptRestrictions: [BiskyRestriction]?
     /// The last locale `setLocale` sent. The one passed at open is on the chat URL.
     private var keptLocale: String?
     private var delivery: Task<Void, Never>?
@@ -156,7 +160,7 @@ public final class HephonAgentController: ObservableObject {
     /// The chat URL was handed to a web view, so its token or code may be spent.
     private var launched = false
     /// The last `ready`: its store, and what the page can do.
-    private var ready: HephonReady?
+    private var ready: BiskyReady?
     /// The page in the web view said ready, so its session is in that web view.
     private var hasSession = false
     /// Counts the pages lost with their web view or its process.
@@ -177,7 +181,7 @@ public final class HephonAgentController: ObservableObject {
     /// `/c/<organization>` on the host: the only page the web view keeps.
     private let chatPath: String
 
-    static let log = Logger(subsystem: "ai.hephon.commerce", category: "HephonCommerce")
+    static let log = Logger(subsystem: "ai.bisky.commerce", category: "Bisky")
 
     /// Opens `<host>/c/<organization>` for one shopper.
     ///
@@ -196,19 +200,19 @@ public final class HephonAgentController: ObservableObject {
     /// messages): each press and click and what was under it, every request with its status and
     /// time, chat turns, the basket, checkout and uncaught errors. The web view is also
     /// inspectable in Safari's Web Inspector (iOS 16.4+). Lines go to `onLog`, or to the system
-    /// log without one (subsystem `ai.hephon.commerce`, category `HephonCommerce`). Tokens,
+    /// log without one (subsystem `ai.bisky.commerce`, category `Bisky`). Tokens,
     /// codes and message text are never logged. Leave it off in release builds unless you are
     /// tracing a problem.
     public init(
-        host: URL = HephonAgentController.defaultHost,
+        host: URL = BiskyAgentController.defaultHost,
         organization: String,
-        launch: HephonLaunch? = nil,
+        launch: BiskyLaunch? = nil,
         store: String? = nil,
         locale: String? = nil,
-        appearance: HephonAppearance? = nil,
-        text: HephonText? = nil,
-        starters: [HephonStarter]? = nil,
-        restrictions: [HephonRestriction]? = nil,
+        appearance: BiskyAppearance? = nil,
+        text: BiskyText? = nil,
+        starters: [BiskyStarter]? = nil,
+        restrictions: [BiskyRestriction]? = nil,
         customDomains: [URL] = [],
         debug: Bool = false,
         onLog: (@MainActor (String) -> Void)? = nil
@@ -225,10 +229,11 @@ public final class HephonAgentController: ObservableObject {
         }
         identified = launch != nil
         chatPath = URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedPath ?? ""
-        allowedOrigins = Set(([host] + customDomains).compactMap(HephonNavigation.origin(of:)))
+        allowedOrigins = Set(([host] + customDomains).compactMap(BiskyNavigation.origin(of:)))
+        openedLocale = locale
         if let text {
             // Never on the URL: held with the other messages until the chat is ready.
-            keptText = text
+            keep(text)
             outbox.append(.text(text))
         }
         if let starters {
@@ -246,13 +251,13 @@ public final class HephonAgentController: ObservableObject {
     public nonisolated static func chatURL(
         host: URL,
         organization: String,
-        launch: HephonLaunch? = nil,
+        launch: BiskyLaunch? = nil,
         store: String? = nil,
         locale: String? = nil,
-        appearance: HephonAppearance? = nil,
+        appearance: BiskyAppearance? = nil,
         debug: Bool = false,
         embed: String = "ios",
-        sdk: String = HephonCommerceSDK.version
+        sdk: String = BiskySDK.version
     ) -> URL {
         var parts = URLComponents(url: host, resolvingAgainstBaseURL: false) ?? URLComponents()
         var base = Substring(parts.percentEncodedPath)
@@ -280,7 +285,7 @@ public final class HephonAgentController: ObservableObject {
     }
 
     /// Tells the chat your app's color scheme.
-    public func setTheme(_ scheme: HephonScheme) {
+    public func setTheme(_ scheme: BiskyScheme) {
         send(.theme(scheme))
     }
 
@@ -288,11 +293,11 @@ public final class HephonAgentController: ObservableObject {
     /// before (at open or here). Held until the chat is ready, like every message, and sent
     /// again after every later load, so a reload keeps it. Ignored when the retailer switched
     /// app changes off in Configure.
-    public func setAppearance(_ appearance: HephonAppearance) {
+    public func setAppearance(_ appearance: BiskyAppearance) {
         if disposed {
             return
         }
-        keptAppearance = (keptAppearance ?? HephonAppearance()).merging(appearance)
+        keptAppearance = (keptAppearance ?? BiskyAppearance()).merging(appearance)
         send(.appearance(appearance))
     }
 
@@ -300,26 +305,51 @@ public final class HephonAgentController: ObservableObject {
     /// one, over what your app sent before (at open or here). Held until the chat is ready,
     /// and sent again after every later load, so a reload keeps it. Ignored when the retailer
     /// switched app changes off in Configure.
-    public func setText(_ text: HephonText) {
+    ///
+    /// With `locale` the words are for that language: the chat keeps one set per language and
+    /// shows the set for the language it is in (since 2.6.0). Returns false, and changes
+    /// nothing, for a locale that is not a tag (`HostMessage.isLocale`).
+    @discardableResult
+    public func setText(_ text: BiskyText) -> Bool {
         if disposed {
-            return
+            return false
         }
-        keptText = (keptText ?? HephonText()).merging(text)
+        if let locale = text.locale, !HostMessage.isLocale(locale) {
+            Self.log.warning("setText: \(locale, privacy: .public) is not a BCP 47 tag like ar or ar-AE; nothing sent")
+            return false
+        }
+        keep(text)
         send(.text(text))
+        return true
+    }
+
+    /// `text` merged into the set kept for its locale.
+    private func keep(_ text: BiskyText) {
+        let key = text.locale ?? ""
+        if keptTexts[key] == nil {
+            keptTextOrder.append(key)
+        }
+        keptTexts[key] = (keptTexts[key] ?? BiskyText()).merging(text)
+    }
+
+    /// The chat's language: what `setLocale` sent, else the one passed at open. The view's own
+    /// words (a chat that could not open) follow it. Since 2.6.0.
+    public var locale: String? {
+        keptLocale ?? openedLocale
     }
 
     /// Sends `text` as the shopper's message, as if they typed it: for a suggestion your app
     /// draws itself (with `showWelcome: false`), or a "Ask about this" button on a product.
     /// Held until the chat is ready, like every message; the chat drops it while a reply is on
-    /// its way (`HephonChatState.busy`). Returns false, and sends nothing, when `text` is empty
-    /// once trimmed or longer than `hephonMaxMessageLength`. Since 2.2.0.
+    /// its way (`BiskyChatState.busy`). Returns false, and sends nothing, when `text` is empty
+    /// once trimmed or longer than `biskyMaxMessageLength`. Since 2.2.0.
     @discardableResult
     public func sendMessage(_ text: String) -> Bool {
         if disposed {
             return false
         }
         guard let message = HostMessage.chatSend(text) else {
-            Self.log.warning("sendMessage: a message is 1 to \(hephonMaxMessageLength) characters; nothing sent")
+            Self.log.warning("sendMessage: a message is 1 to \(biskyMaxMessageLength) characters; nothing sent")
             return false
         }
         send(message)
@@ -342,14 +372,14 @@ public final class HephonAgentController: ObservableObject {
     }
 
     /// Opens the chat's "Previous chats", for an app that draws its own header (the chat's menu
-    /// is in the chat's). Show your button while `HephonChatState.previousChats` is above 0.
+    /// is in the chat's). Show your button while `BiskyChatState.previousChats` is above 0.
     /// Since 2.5.0.
     public func openHistory() {
         send(.historyOpen())
     }
 
     /// Opens the chat's "What I remember", where the shopper sees, removes or stops what the
-    /// assistant remembers. Show your button while `HephonChatState.memory` is true. Since 2.5.0.
+    /// assistant remembers. Show your button while `BiskyChatState.memory` is true. Since 2.5.0.
     public func openMemory() {
         send(.memoryOpen())
     }
@@ -359,15 +389,15 @@ public final class HephonAgentController: ObservableObject {
     /// Held until the chat is ready, and sent again after every later load, so a reload keeps
     /// them. Ignored when the retailer switched app changes off in Configure (`ready` then
     /// lists no `starters` capability). Returns false, and changes nothing, for more than six
-    /// or one that is not `HephonStarter.isValid`. Since 2.2.0.
+    /// or one that is not `BiskyStarter.isValid`. Since 2.2.0.
     @discardableResult
-    public func setStarters(_ starters: [HephonStarter]) -> Bool {
+    public func setStarters(_ starters: [BiskyStarter]) -> Bool {
         if disposed {
             return false
         }
         guard let message = HostMessage.starters(starters) else {
             Self.log.warning(
-                "setStarters: up to \(HephonStarter.maxCount) suggestions, each a label of 1 to 60 characters and a prompt of 1 to 300; nothing sent"
+                "setStarters: up to \(BiskyStarter.maxCount) suggestions, each a label of 1 to 60 characters and a prompt of 1 to 300; nothing sent"
             )
             return false
         }
@@ -398,7 +428,7 @@ public final class HephonAgentController: ObservableObject {
     /// Kinds of product this chat never shows, added to what the retailer excludes: an app
     /// can never show a kind the retailer hides. Replaces what your app set before (an empty
     /// list leaves only the retailer's). Sent again after every later load. Since 2.2.0.
-    public func setRestrictions(_ kinds: [HephonRestriction]) {
+    public func setRestrictions(_ kinds: [BiskyRestriction]) {
         if disposed {
             return
         }
@@ -464,7 +494,7 @@ public final class HephonAgentController: ObservableObject {
             return
         }
         let again = driver.url.flatMap { current in
-            HephonNavigation.origin(of: current) != nil
+            BiskyNavigation.origin(of: current) != nil
                 && decide(current, isMainFrame: true) == .allow ? current : nil
         }
         load(again ?? url)
@@ -484,7 +514,7 @@ public final class HephonAgentController: ObservableObject {
         unload()
     }
 
-    // MARK: - The view's side (HephonAgentViewController, and the tests)
+    // MARK: - The view's side (BiskyAgentViewController, and the tests)
 
     /// `view` began to show the chat at `at`: load it if it is not, and tell the page.
     func viewShown(by view: AnyObject, at: Date) {
@@ -601,8 +631,10 @@ public final class HephonAgentController: ObservableObject {
             // Every new document starts hidden: tell it again.
             sendVisibility()
             if again {
-                if let keptText {
-                    deliver(.text(keptText))
+                for key in keptTextOrder {
+                    if let text = keptTexts[key], !text.isEmpty {
+                        deliver(.text(text))
+                    }
                 }
                 if let keptAppearance {
                     deliver(.appearance(keptAppearance))
@@ -639,7 +671,7 @@ public final class HephonAgentController: ObservableObject {
         case let .openProduct(product): onOpenProduct?(product)
         case .sessionExpired: renewSession()
         case .close:
-            let view = shown ? presenter as? HephonChatPresenter : nil
+            let view = shown ? presenter as? BiskyChatPresenter : nil
             trace(onClose == nil && view == nil ? "close, but nothing to close" : "close")
             if let onClose {
                 onClose()
@@ -689,7 +721,7 @@ public final class HephonAgentController: ObservableObject {
                 "load error \(error.code) \(error.domain) \(error.localizedDescription) (main frame: true, \(Self.redacted(failing)))"
             )
         }
-        let ours = failing.map { allowedOrigins.contains(HephonNavigation.origin(of: $0) ?? "") } ?? true
+        let ours = failing.map { allowedOrigins.contains(BiskyNavigation.origin(of: $0) ?? "") } ?? true
         guard !disposed, ours, !(error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled) else {
             return
         }
@@ -734,8 +766,8 @@ public final class HephonAgentController: ObservableObject {
 
     // MARK: - Private
 
-    private func decide(_ url: URL, isMainFrame: Bool) -> HephonNavigation {
-        HephonNavigation.decide(
+    private func decide(_ url: URL, isMainFrame: Bool) -> BiskyNavigation {
+        BiskyNavigation.decide(
             url,
             isMainFrame: isMainFrame,
             allowedOrigins: allowedOrigins,
@@ -757,7 +789,7 @@ public final class HephonAgentController: ObservableObject {
             return
         }
         // The first token or code is spent once the page said ready.
-        let plain = ready.map { HephonNavigation.relaunchURL(base, store: $0.storeId) } ?? base
+        let plain = ready.map { BiskyNavigation.relaunchURL(base, store: $0.storeId) } ?? base
         guard identified, !hasSession else {
             open(plain)
             return
@@ -778,7 +810,7 @@ public final class HephonAgentController: ObservableObject {
             if token == nil {
                 warnNoToken()
             }
-            open(token.map { HephonNavigation.relaunchURL(self.url, launchToken: $0) } ?? plain)
+            open(token.map { BiskyNavigation.relaunchURL(self.url, launchToken: $0) } ?? plain)
         }
     }
 
@@ -875,7 +907,7 @@ public final class HephonAgentController: ObservableObject {
         delivery = Task { [weak self] in
             await previous?.value
             guard let self, !disposed, let driver, driver === target,
-                  let current = driver.url.flatMap(HephonNavigation.origin(of:)),
+                  let current = driver.url.flatMap(BiskyNavigation.origin(of:)),
                   allowedOrigins.contains(current)
             else {
                 return
@@ -1026,12 +1058,12 @@ public final class HephonAgentController: ObservableObject {
     }
 }
 
-/// One chat per controller: `.sheet(item: $assistant) { HephonAgentView(controller: $0) }`.
-extension HephonAgentController: Identifiable {}
+/// One chat per controller: `.sheet(item: $assistant) { BiskyAgentView(controller: $0) }`.
+extension BiskyAgentController: Identifiable {}
 
 /// A view showing the chat, which closes itself when the chat asks and the app set no `onClose`.
 @MainActor
-protocol HephonChatPresenter: AnyObject {
+protocol BiskyChatPresenter: AnyObject {
     func closeChat()
 }
 
@@ -1041,7 +1073,7 @@ protocol WebViewDriving: AnyObject {
     /// The page the web view shows now.
     var url: URL? { get }
     func load(_ url: URL)
-    /// Calls `window.hephon.receive(json)` in the page.
+    /// Calls `window.bisky.receive(json)` in the page.
     func deliver(_ json: String) async throws
     /// Hands a link to iOS (Safari, Phone, Mail, another app).
     func openExternally(_ url: URL)

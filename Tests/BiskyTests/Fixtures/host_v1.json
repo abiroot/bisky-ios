@@ -2,20 +2,17 @@
 	"$comment": "Host-side contract every native SDK implements (docs/integrations/SDKS.md 2.2): which navigations the chat webview allows, opens outside the app or blocks; how an origin is normalized; and the chat URL it opens. Canonical copy: packages/embed/fixtures/host_v1.json, checked for consistency by packages/embed/src/__tests__/host-contract.test.ts. Every SDK keeps a byte-identical copy (scripts/check-sdk-fixtures.ts). chatUrl.expect is compared as origin, path and an unordered set of decoded query pairs; \"error\" means the SDK refuses the input. Keys starting with $ are comments.",
 	"navigation": {
 		"$comment": "decideNavigation(url, isMainFrame, allowedOrigins, chatPath). allow: load in the webview. openExternally: hand to the platform (browser, dialer, mail, app). block: refuse.",
-		"allowedOrigins": [
-			"https://commerce.hephon.ai",
-			"https://chat.suppy.app"
-		],
+		"allowedOrigins": ["https://bisky.ai", "https://chat.suppy.app"],
 		"chatPath": "/c/suppy",
 		"cases": [
 			{
-				"url": "https://commerce.hephon.ai/c/suppy?embed=flutter",
+				"url": "https://bisky.ai/c/suppy?embed=flutter",
 				"isMainFrame": true,
 				"expect": "allow",
-				"$comment": "The chat on the Hephon host."
+				"$comment": "The chat on the Bisky host."
 			},
 			{
-				"url": "https://COMMERCE.hephon.ai:443/c/suppy",
+				"url": "https://BISKY.ai:443/c/suppy",
 				"isMainFrame": true,
 				"expect": "allow",
 				"$comment": "Host case and the default port do not matter."
@@ -44,7 +41,7 @@
 				"expect": "allow"
 			},
 			{
-				"url": "https://commerce.hephon.ai/legal/privacy",
+				"url": "https://bisky.ai/legal/privacy",
 				"isMainFrame": true,
 				"expect": "openExternally",
 				"$comment": "The chat footer's Privacy link: same host, not the chat, so it would replace the chat with no way back."
@@ -55,23 +52,23 @@
 				"expect": "openExternally"
 			},
 			{
-				"url": "https://commerce.hephon.ai/app",
+				"url": "https://bisky.ai/app",
 				"isMainFrame": true,
 				"expect": "openExternally"
 			},
 			{
-				"url": "https://commerce.hephon.ai/",
+				"url": "https://bisky.ai/",
 				"isMainFrame": true,
 				"expect": "openExternally"
 			},
 			{
-				"url": "https://commerce.hephon.ai/c/noknok",
+				"url": "https://bisky.ai/c/noknok",
 				"isMainFrame": true,
 				"expect": "openExternally",
 				"$comment": "Another retailer's chat."
 			},
 			{
-				"url": "https://commerce.hephon.ai/c/suppy-other",
+				"url": "https://bisky.ai/c/suppy-other",
 				"isMainFrame": true,
 				"expect": "openExternally",
 				"$comment": "A path that only starts like the chat path."
@@ -92,19 +89,19 @@
 				"expect": "openExternally"
 			},
 			{
-				"url": "https://commerce.hephon.ai.evil.com/c/suppy",
+				"url": "https://bisky.ai.evil.com/c/suppy",
 				"isMainFrame": true,
 				"expect": "openExternally",
 				"$comment": "Look-alike host."
 			},
 			{
-				"url": "http://commerce.hephon.ai/c/suppy",
+				"url": "http://bisky.ai/c/suppy",
 				"isMainFrame": true,
 				"expect": "openExternally",
 				"$comment": "Same host, other scheme: another origin."
 			},
 			{
-				"url": "https://commerce.hephon.ai:8443/c/suppy",
+				"url": "https://bisky.ai:8443/c/suppy",
 				"isMainFrame": true,
 				"expect": "openExternally",
 				"$comment": "Same host, other port: another origin."
@@ -122,7 +119,7 @@
 				"$comment": "target=_blank: iOS reports a new-window link as not the main frame; Android (multiple windows off) delivers it as a main-frame navigation with the same result."
 			},
 			{
-				"url": "https://hephon.ai",
+				"url": "https://bisky.ai",
 				"isMainFrame": false,
 				"expect": "openExternally"
 			},
@@ -143,7 +140,7 @@
 				"expect": "openExternally"
 			},
 			{
-				"url": "https://commerce.hephon.ai/legal/privacy",
+				"url": "https://bisky.ai/legal/privacy",
 				"isMainFrame": false,
 				"expect": "openExternally"
 			},
@@ -177,16 +174,16 @@
 	},
 	"origins": [
 		{
-			"url": "https://Commerce.Hephon.ai:443/x?y",
-			"expect": "https://commerce.hephon.ai"
+			"url": "https://Bisky.AI:443/x?y",
+			"expect": "https://bisky.ai"
 		},
 		{
-			"url": "https://COMMERCE.hephon.ai:443/c/x",
-			"expect": "https://commerce.hephon.ai"
+			"url": "https://BISKY.ai:443/c/x",
+			"expect": "https://bisky.ai"
 		},
 		{
-			"url": "https://commerce.hephon.ai/c/suppy?embed=ios#top",
-			"expect": "https://commerce.hephon.ai"
+			"url": "https://bisky.ai/c/suppy?embed=ios#top",
+			"expect": "https://bisky.ai"
 		},
 		{
 			"url": "http://10.0.2.2:3051/c/x",
@@ -233,25 +230,25 @@
 	],
 	"chatUrl": [
 		{
-			"host": "https://commerce.hephon.ai/",
+			"host": "https://bisky.ai/",
 			"organization": "suppy",
 			"launchCode": "abc",
 			"store": "s1",
 			"embed": "ios",
 			"sdk": "1.0.0",
 			"locale": "ar",
-			"expect": "https://commerce.hephon.ai/c/suppy?code=abc&embed=ios&sdk=1.0.0&locale=ar",
+			"expect": "https://bisky.ai/c/suppy?code=abc&embed=ios&sdk=1.0.0&locale=ar",
 			"$comment": "A store is dropped with a launch code: the session already has its store."
 		},
 		{
-			"host": "https://commerce.hephon.ai",
+			"host": "https://bisky.ai",
 			"organization": "suppy-demo",
 			"launchToken": "token-1",
 			"store": "branch-7",
 			"embed": "flutter",
 			"sdk": "1.0.0",
 			"locale": "ar",
-			"expect": "https://commerce.hephon.ai/c/suppy-demo?lt=token-1&embed=flutter&sdk=1.0.0&locale=ar",
+			"expect": "https://bisky.ai/c/suppy-demo?lt=token-1&embed=flutter&sdk=1.0.0&locale=ar",
 			"$comment": "A store is dropped with a launch token: the token names the store."
 		},
 		{
@@ -274,11 +271,11 @@
 			"$comment": "Anonymous: the store is a hint for the new session."
 		},
 		{
-			"host": "https://commerce.hephon.ai",
+			"host": "https://bisky.ai",
 			"organization": "suppy",
 			"embed": "android",
 			"sdk": "1.0.0",
-			"expect": "https://commerce.hephon.ai/c/suppy?embed=android&sdk=1.0.0",
+			"expect": "https://bisky.ai/c/suppy?embed=android&sdk=1.0.0",
 			"$comment": "Anonymous without a store or locale: the agent's default store."
 		},
 		{
@@ -292,7 +289,7 @@
 			"$comment": "Values are query-encoded; compare decoded pairs."
 		},
 		{
-			"host": "https://commerce.hephon.ai",
+			"host": "https://bisky.ai",
 			"organization": "suppy",
 			"launchToken": "token-1",
 			"launchCode": "abc",

@@ -1,8 +1,8 @@
 import Foundation
-@testable import HephonCommerce
+@testable import Bisky
 import XCTest
 
-private let hephon = "https://commerce.hephon.ai"
+private let bisky = "https://bisky.ai"
 
 /// debug_v1.json: debug mode, since SDK 2.3.0.
 final class DebugContractTests: XCTestCase {
@@ -25,9 +25,9 @@ final class DebugContractTests: XCTestCase {
 
     func testAddsTheDebugParameterToTheChatURL() throws {
         let param = try XCTUnwrap(Fixture.object("debug_v1")["chatUrl"] as? [String: String])
-        let url = HephonAgentController.chatURL(
-            host: URL(string: hephon)!, organization: "suppy-demo", locale: "ar",
-            appearance: HephonAppearance(scheme: .dark), debug: true
+        let url = BiskyAgentController.chatURL(
+            host: URL(string: bisky)!, organization: "suppy-demo", locale: "ar",
+            appearance: BiskyAppearance(scheme: .dark), debug: true
         )
         let items = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
         XCTAssertTrue(items.contains(URLQueryItem(name: param["param"]!, value: param["value"])))
@@ -42,9 +42,9 @@ final class DebugTests: XCTestCase {
     private var webs: [FakeWebView] = []
 
     private func make(
-        launch: HephonLaunch? = .token("token-1"), debug: Bool = true, checkout: Bool = true
-    ) -> HephonAgentController {
-        let controller = HephonAgentController(
+        launch: BiskyLaunch? = .token("token-1"), debug: Bool = true, checkout: Bool = true
+    ) -> BiskyAgentController {
+        let controller = BiskyAgentController(
             organization: "suppy-demo", launch: launch, store: "branch-7", debug: debug,
             onLog: { [unowned self] in lines.append($0) }
         )
@@ -61,8 +61,8 @@ final class DebugTests: XCTestCase {
         return controller
     }
 
-    private func post(_ controller: HephonAgentController, _ json: String) {
-        controller.receive(json, isMainFrame: true, origin: hephon)
+    private func post(_ controller: BiskyAgentController, _ json: String) {
+        controller.receive(json, isMainFrame: true, origin: bisky)
     }
 
     func testIsOffByDefaultNoParameterAndNothingLogged() throws {
@@ -89,7 +89,7 @@ final class DebugTests: XCTestCase {
         await settle()
 
         XCTAssertTrue(
-            try XCTUnwrap(lines.first).hasPrefix("load \(hephon)/c/suppy-demo?lt=%E2%80%A6&"),
+            try XCTUnwrap(lines.first).hasPrefix("load \(bisky)/c/suppy-demo?lt=%E2%80%A6&"),
             "\(lines)"
         )
         XCTAssertFalse(lines.joined(separator: "\n").contains("token-1"))
@@ -116,7 +116,7 @@ final class DebugTests: XCTestCase {
     func testTracesShownHiddenReleasedPagesAndLoadErrors() async throws {
         let controller = make(launch: .code("code-1"))
         let sheet = NSObject()
-        let page = "\(hephon)/c/suppy-demo?code=%E2%80%A6&embed=ios&sdk=\(HephonCommerceSDK.version)&debug=1"
+        let page = "\(bisky)/c/suppy-demo?code=%E2%80%A6&embed=ios&sdk=\(BiskySDK.version)&debug=1"
         let close = try Fixture.page("close")
         let closeId = try XCTUnwrap(PageEvent.parse(close)).id
         controller.preload()

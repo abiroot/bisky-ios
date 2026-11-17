@@ -107,24 +107,24 @@
 	],
 	"relaunchUrl": [
 		{
-			"url": "https://commerce.hephon.ai/c/suppy?code=abc&embed=ios&sdk=1.1.0&locale=ar",
+			"url": "https://bisky.ai/c/suppy?code=abc&embed=ios&sdk=1.1.0&locale=ar",
 			"store": "branch-7",
-			"expect": "https://commerce.hephon.ai/c/suppy?embed=ios&sdk=1.1.0&locale=ar&store=branch-7"
+			"expect": "https://bisky.ai/c/suppy?embed=ios&sdk=1.1.0&locale=ar&store=branch-7"
 		},
 		{
-			"url": "https://commerce.hephon.ai/c/suppy?lt=a.b.c&embed=flutter&sdk=1.1.0",
+			"url": "https://bisky.ai/c/suppy?lt=a.b.c&embed=flutter&sdk=1.1.0",
 			"store": "",
-			"expect": "https://commerce.hephon.ai/c/suppy?embed=flutter&sdk=1.1.0"
+			"expect": "https://bisky.ai/c/suppy?embed=flutter&sdk=1.1.0"
 		},
 		{
-			"url": "https://commerce.hephon.ai/c/suppy?store=s1&embed=android&sdk=1.1.0",
+			"url": "https://bisky.ai/c/suppy?store=s1&embed=android&sdk=1.1.0",
 			"store": "s2",
-			"expect": "https://commerce.hephon.ai/c/suppy?store=s1&embed=android&sdk=1.1.0"
+			"expect": "https://bisky.ai/c/suppy?store=s1&embed=android&sdk=1.1.0"
 		},
 		{
-			"url": "https://commerce.hephon.ai/c/suppy?lt=a.b.c&store=s1&embed=react-native&sdk=1.1.0",
+			"url": "https://bisky.ai/c/suppy?lt=a.b.c&store=s1&embed=react-native&sdk=1.1.0",
 			"store": "s1",
-			"expect": "https://commerce.hephon.ai/c/suppy?store=s1&embed=react-native&sdk=1.1.0"
+			"expect": "https://bisky.ai/c/suppy?store=s1&embed=react-native&sdk=1.1.0"
 		}
 	]
 }

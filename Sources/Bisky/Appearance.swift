@@ -1,16 +1,16 @@
 import Foundation
 
 /// What your app restyles in the chat it opens. Every field is optional: one left nil keeps
-/// what the retailer set in Hephon.
+/// what the retailer set in Bisky.
 ///
-/// Pass it to `HephonAgentController(appearance:)` so the chat opens restyled, or to
+/// Pass it to `BiskyAgentController(appearance:)` so the chat opens restyled, or to
 /// `setAppearance(_:)` while it is open. The retailer can switch app changes off in
-/// Configure: the chat then ignores both, and `HephonReady.capabilities` does not list
+/// Configure: the chat then ignores both, and `BiskyReady.capabilities` does not list
 /// `appearance`.
 ///
-/// Mirrors `Tests/HephonCommerceTests/Fixtures/appearance_v1.json`, the contract every Hephon
+/// Mirrors `Tests/BiskyTests/Fixtures/appearance_v1.json`, the contract every Bisky
 /// SDK is tested against.
-public struct HephonAppearance: Sendable, Equatable {
+public struct BiskyAppearance: Sendable, Equatable {
     /// Light, dark, or `auto` to follow the device.
     public enum Scheme: String, Sendable, CaseIterable {
         case light, dark, auto
@@ -108,9 +108,9 @@ public struct HephonAppearance: Sendable, Equatable {
     /// Since 2.2.0.
     public let showWelcome: Bool?
     /// A back arrow before the logo that closes the chat (`onClose`): for a chat opened as a
-    /// full page (`HephonAgentViewController(presentation: .fullScreen)`). Since 2.2.0.
+    /// full page (`BiskyAgentViewController(presentation: .fullScreen)`). Since 2.2.0.
     public let showBack: Bool?
-    /// "Powered by Hephon". Takes effect only where Hephon allows the retailer to hide it.
+    /// "Powered by Bisky". Takes effect only where Bisky allows the retailer to hide it.
     /// Since 2.2.0.
     public let showPoweredBy: Bool?
     /// `true` hides "Help with an order". This and the next two are named `hide` because that
@@ -284,8 +284,8 @@ public struct HephonAppearance: Sendable, Equatable {
     }
 
     /// This appearance with every field `other` sets replaced: what the chat shows after both.
-    func merging(_ other: HephonAppearance) -> HephonAppearance {
-        HephonAppearance(
+    func merging(_ other: BiskyAppearance) -> BiskyAppearance {
+        BiskyAppearance(
             scheme: other.scheme ?? scheme,
             primaryColor: other.primaryColor ?? primaryColor,
             deepColor: other.deepColor ?? deepColor,
@@ -333,10 +333,10 @@ public struct HephonAppearance: Sendable, Equatable {
 /// The words your app changes in the chat it opens. Every field is optional: one left nil
 /// keeps the retailer's.
 ///
-/// Pass it to `HephonAgentController(text:)` or to `setText(_:)`. It is sent to the chat as a
+/// Pass it to `BiskyAgentController(text:)` or to `setText(_:)`. It is sent to the chat as a
 /// message, never on the chat URL. The retailer can switch app changes off in Configure: the
-/// chat then ignores it, and `HephonReady.capabilities` does not list `text`.
-public struct HephonText: Sendable, Equatable {
+/// chat then ignores it, and `BiskyReady.capabilities` does not list `text`.
+public struct BiskyText: Sendable, Equatable {
     /// The chat's button and title labels.
     public struct Labels: Sendable, Equatable {
         public let viewBasket: String?
@@ -414,6 +414,10 @@ public struct HephonText: Sendable, Equatable {
         }
     }
 
+    /// The language these words are for, a BCP 47 tag like `ar-AE`. The chat keeps one set per
+    /// language and shows the set for the language it is in; without one, the words are for
+    /// your app's language, as before. Since 2.6.0.
+    public let locale: String?
     /// The headline of the empty chat.
     public let welcomeTitle: String?
     public let welcomeSubtitle: String?
@@ -426,6 +430,7 @@ public struct HephonText: Sendable, Equatable {
     public let labels: Labels?
 
     public init(
+        locale: String? = nil,
         welcomeTitle: String? = nil,
         welcomeSubtitle: String? = nil,
         placeholder: String? = nil,
@@ -433,6 +438,7 @@ public struct HephonText: Sendable, Equatable {
         assistantName: String? = nil,
         labels: Labels? = nil
     ) {
+        self.locale = locale
         self.welcomeTitle = welcomeTitle
         self.welcomeSubtitle = welcomeSubtitle
         self.placeholder = placeholder
@@ -441,7 +447,13 @@ public struct HephonText: Sendable, Equatable {
         self.labels = labels
     }
 
-    /// The names of the fields, as the `text` message spells them. `labels` is the last.
+    /// No words are set (a locale alone sets nothing).
+    var isEmpty: Bool {
+        pairs.isEmpty && (labels?.pairs ?? []).isEmpty
+    }
+
+    /// The names of the fields, as the `text` message spells them. `labels` is the last;
+    /// `locale` (since 2.6.0) is not a word and is not listed.
     static let keys = ["welcomeTitle", "welcomeSubtitle", "placeholder", "tagline", "assistantName", "labels"]
 
     /// The strings that are set, in the order of `keys`, without the labels.
@@ -451,9 +463,10 @@ public struct HephonText: Sendable, Equatable {
     }
 
     /// This text with every field `other` sets replaced, the labels one by one.
-    func merging(_ other: HephonText) -> HephonText {
+    func merging(_ other: BiskyText) -> BiskyText {
         let merged = other.labels.map { (labels ?? Labels()).merging($0) } ?? labels
-        return HephonText(
+        return BiskyText(
+            locale: other.locale ?? locale,
             welcomeTitle: other.welcomeTitle ?? welcomeTitle,
             welcomeSubtitle: other.welcomeSubtitle ?? welcomeSubtitle,
             placeholder: other.placeholder ?? placeholder,
@@ -496,7 +509,7 @@ struct OverrideKey: CodingKey {
     }
 }
 
-extension HephonAppearance {
+extension BiskyAppearance {
     /// Only the fields that are set, a flag as a JSON boolean.
     func encodeData(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: OverrideKey.self)
@@ -509,10 +522,13 @@ extension HephonAppearance {
     }
 }
 
-extension HephonText {
+extension BiskyText {
     /// Only the fields that are set; `labels` is left out when no label is.
     func encodeData(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: OverrideKey.self)
+        if let locale {
+            try container.encode(locale, forKey: OverrideKey("locale"))
+        }
         for (key, value) in pairs {
             try container.encode(value, forKey: OverrideKey(key))
         }

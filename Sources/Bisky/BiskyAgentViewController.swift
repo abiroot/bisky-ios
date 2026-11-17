@@ -3,19 +3,19 @@ import SwiftUI
 import UIKit
 import WebKit
 
-/// The chat of a `HephonAgentController`, with a spinner while it loads and a retry when it
+/// The chat of a `BiskyAgentController`, with a spinner while it loads and a retry when it
 /// cannot. Presented, it is a sheet at full height with a grabber:
 ///
-///     presenter.present(HephonAgentViewController(controller: controller), animated: true)
+///     presenter.present(BiskyAgentViewController(controller: controller), animated: true)
 ///
 /// or, with `presentation: .fullScreen`, a page of its own that the chat's back arrow
-/// (`HephonAppearance(showBack: true)`) closes. Pushed on a navigation controller it is a
+/// (`BiskyAppearance(showBack: true)`) closes. Pushed on a navigation controller it is a
 /// screen of the stack, and the back arrow pops it.
 ///
 /// Dismissing it (or removing it from its parent) hides the chat when `preload()` was called on
 /// the controller, so the next open is immediate. Otherwise it disposes the controller.
 @MainActor
-public final class HephonAgentViewController: UIViewController, HephonChatPresenter {
+public final class BiskyAgentViewController: UIViewController, BiskyChatPresenter {
     /// How the view is presented. Since 2.2.0.
     public enum Presentation: Sendable, Equatable {
         /// A sheet at full height with a grabber, the chat scrolling inside it.
@@ -25,10 +25,13 @@ public final class HephonAgentViewController: UIViewController, HephonChatPresen
         case fullScreen
     }
 
-    public let controller: HephonAgentController
+    public let controller: BiskyAgentController
     /// How `present` shows this view. Since 2.2.0.
     public let presentation: Presentation
-    /// Closes the view when the chat asks and the app set no `onClose`: `HephonAgentView` sets
+    /// The view's own words when the chat cannot open. Nil: English, Arabic or French from the
+    /// controller's locale, else the device's. Since 2.6.0.
+    public var words: BiskyViewWords?
+    /// Closes the view when the chat asks and the app set no `onClose`: `BiskyAgentView` sets
     /// SwiftUI's dismiss here.
     var dismissChat: (@MainActor () -> Void)?
 
@@ -37,7 +40,7 @@ public final class HephonAgentViewController: UIViewController, HephonChatPresen
     private var state: AnyCancellable?
     private weak var webView: WKWebView?
 
-    public init(controller: HephonAgentController, presentation: Presentation = .sheet) {
+    public init(controller: BiskyAgentController, presentation: Presentation = .sheet) {
         self.controller = controller
         self.presentation = presentation
         super.init(nibName: nil, bundle: nil)
@@ -169,11 +172,12 @@ public final class HephonAgentViewController: UIViewController, HephonChatPresen
     }
 
     private func buildFailure(in overlay: UIView) {
+        let words = words ?? BiskyViewWords.forLocale(controller.locale ?? Locale.preferredLanguages.first)
         let title = UILabel()
-        title.text = "The assistant couldn't open"
+        title.text = words.failedTitle
         title.font = .preferredFont(forTextStyle: .headline)
         let detail = UILabel()
-        detail.text = "Check your connection and try again."
+        detail.text = words.failedBody
         detail.font = .preferredFont(forTextStyle: .body)
         detail.textColor = .secondaryLabel
         for label in [title, detail] {
@@ -182,7 +186,7 @@ public final class HephonAgentViewController: UIViewController, HephonChatPresen
             label.textAlignment = .center
         }
         let retry = UIButton(type: .system)
-        retry.setTitle("Try again", for: .normal)
+        retry.setTitle(words.tryAgain, for: .normal)
         retry.titleLabel?.font = .preferredFont(forTextStyle: .headline)
         retry.addAction(UIAction { [weak self] _ in self?.controller.reload() }, for: .primaryActionTriggered)
 
@@ -201,36 +205,36 @@ public final class HephonAgentViewController: UIViewController, HephonChatPresen
     }
 }
 
-/// `HephonAgentViewController` in SwiftUI, for a `.sheet` or a screen of its own:
+/// `BiskyAgentViewController` in SwiftUI, for a `.sheet` or a screen of its own:
 ///
-///     .sheet(isPresented: $open) { HephonAgentView(controller: controller) }
+///     .sheet(isPresented: $open) { BiskyAgentView(controller: controller) }
 ///
-/// As a full page, with the chat's back arrow (`HephonAppearance(showBack: true)`) to close it:
+/// As a full page, with the chat's back arrow (`BiskyAppearance(showBack: true)`) to close it:
 ///
-///     .fullScreenCover(item: $assistant) { HephonAgentView(controller: $0) }
+///     .fullScreenCover(item: $assistant) { BiskyAgentView(controller: $0) }
 ///
 /// The back arrow closes the view with SwiftUI's dismiss, unless the controller has an `onClose`.
 /// Leaving the view hides the chat when `preload()` was called on the controller, and disposes
 /// the controller otherwise.
-public struct HephonAgentView: UIViewControllerRepresentable {
-    public let controller: HephonAgentController
+public struct BiskyAgentView: UIViewControllerRepresentable {
+    public let controller: BiskyAgentController
 
-    public init(controller: HephonAgentController) {
+    public init(controller: BiskyAgentController) {
         self.controller = controller
     }
 
-    public func makeUIViewController(context: Context) -> HephonAgentViewController {
-        let viewController = HephonAgentViewController(controller: controller)
+    public func makeUIViewController(context: Context) -> BiskyAgentViewController {
+        let viewController = BiskyAgentViewController(controller: controller)
         updateUIViewController(viewController, context: context)
         return viewController
     }
 
-    public func updateUIViewController(_ viewController: HephonAgentViewController, context: Context) {
+    public func updateUIViewController(_ viewController: BiskyAgentViewController, context: Context) {
         let dismiss = context.environment.dismiss
         viewController.dismissChat = { dismiss() }
     }
 
-    public static func dismantleUIViewController(_ viewController: HephonAgentViewController, coordinator _: Void) {
+    public static func dismantleUIViewController(_ viewController: BiskyAgentViewController, coordinator _: Void) {
         viewController.leave()
     }
 }

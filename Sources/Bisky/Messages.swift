@@ -1,12 +1,12 @@
 import Foundation
 
-/// Bridge envelope v1: the messages the Hephon chat page and your app exchange. Every message
+/// Bridge envelope v1: the messages the Bisky chat page and your app exchange. Every message
 /// is `{v: 1, id, type, ts, data}`; `id` is the idempotency key (events arrive at least once).
 ///
-/// Mirrors the `@repo/embed` schemas. `Tests/HephonCommerceTests/Fixtures/bridge_v1.json` and
+/// Mirrors the `@repo/embed` schemas. `Tests/BiskyTests/Fixtures/bridge_v1.json` and
 /// `preload_v1.json`, `appearance_v1.json` and `control_v1.json` are the shared contract both sides
 /// are tested against.
-public let hephonBridgeVersion = 1
+public let biskyBridgeVersion = 1
 
 /// Who changed the cart.
 public enum CartOrigin: String, Sendable, Decodable {
@@ -89,7 +89,7 @@ public struct CartHandoff: Sendable, Decodable, Equatable {
 }
 
 /// The chat is open and listening.
-public struct HephonReady: Sendable, Decodable, Equatable {
+public struct BiskyReady: Sendable, Decodable, Equatable {
     public let orgSlug: String
     public let storeId: String
     /// Host messages the page accepts, like `cart.snapshot`.
@@ -100,7 +100,7 @@ public struct HephonReady: Sendable, Decodable, Equatable {
 }
 
 /// The agent handed the conversation to a person on the retailer's team.
-public struct HephonHandoff: Sendable, Decodable, Equatable {
+public struct BiskyHandoff: Sendable, Decodable, Equatable {
     public let conversationId: String
     public let reason: String?
 }
@@ -116,8 +116,8 @@ public struct OpenProduct: Sendable, Decodable, Equatable {
     public let storeId: String
 }
 
-/// How long the chat took to open, for `HephonAgentController.onTiming`.
-public struct HephonOpenTiming: Sendable, Decodable, Equatable {
+/// How long the chat took to open, for `BiskyAgentController.onTiming`.
+public struct BiskyOpenTiming: Sendable, Decodable, Equatable {
     /// Milliseconds from the moment the view began to appear until the chat was usable and on
     /// screen. Nil when the page could not confirm a frame was drawn.
     public let open: Int?
@@ -125,9 +125,9 @@ public struct HephonOpenTiming: Sendable, Decodable, Equatable {
     public let preloaded: Bool
 }
 
-/// What the chat is doing, for `HephonAgentController.onStateChange`: posted whenever it
+/// What the chat is doing, for `BiskyAgentController.onStateChange`: posted whenever it
 /// changes, so your app's own header or buttons can follow it. Since 2.2.0.
-public struct HephonChatState: Sendable, Decodable, Equatable {
+public struct BiskyChatState: Sendable, Decodable, Equatable {
     /// Which screen the chat shows.
     public enum View: String, Sendable, Decodable, CaseIterable {
         /// The first screen, before any message.
@@ -189,13 +189,13 @@ public enum CartChange: Sendable, Equatable {
     case added, updated, removed
 }
 
-/// A message from the chat page. `HephonAgentController` turns these into its callbacks.
+/// A message from the chat page. `BiskyAgentController` turns these into its callbacks.
 public enum PageMessage: Sendable, Equatable {
-    case ready(HephonReady)
+    case ready(BiskyReady)
     case cartItem(CartChange, CartItemEvent)
     case cartCleared(CartCleared)
     case checkout(CartHandoff)
-    case handoff(HephonHandoff)
+    case handoff(BiskyHandoff)
     case openProduct(OpenProduct)
     case sessionExpired
     /// Web widget only; webviews ignore it.
@@ -228,9 +228,9 @@ enum PageEvent: Sendable, Equatable {
     /// The chat is drawn, before it is ready: the loading indicator can go. Since 1.1.0.
     case painted
     /// The chat became usable after being shown. Since 1.1.0.
-    case timing(HephonOpenTiming)
+    case timing(BiskyOpenTiming)
     /// What the chat is doing changed. Since 2.2.0.
-    case state(HephonChatState)
+    case state(BiskyChatState)
     /// One line of the page's trace, sent only when the controller has `debug` on. `level` is
     /// `info`, `warn` or `error`. Since 2.3.0.
     case log(level: String, message: String)
@@ -238,7 +238,7 @@ enum PageEvent: Sendable, Equatable {
     /// The levels a `log` may have.
     static let logLevels: Set<String> = ["info", "warn", "error"]
 
-    /// What the debug trace calls this message: its bridge type, the same in every Hephon SDK
+    /// What the debug trace calls this message: its bridge type, the same in every Bisky SDK
     /// and in the `->` lines, so traces from two apps read alike.
     var name: String {
         switch self {
@@ -277,7 +277,7 @@ enum PageEvent: Sendable, Equatable {
         let decoder = JSONDecoder()
         guard
             let header = try? decoder.decode(Header.self, from: bytes),
-            header.v == hephonBridgeVersion,
+            header.v == biskyBridgeVersion,
             !header.id.isEmpty
         else {
             return nil
@@ -288,13 +288,13 @@ enum PageEvent: Sendable, Equatable {
         var message: PageMessage?
         var event: PageEvent?
         switch header.type {
-        case "ready": message = data(HephonReady.self).map(PageMessage.ready)
+        case "ready": message = data(BiskyReady.self).map(PageMessage.ready)
         case "cart.item_added": message = data(CartItemEvent.self).map { .cartItem(.added, $0) }
         case "cart.item_updated": message = data(CartItemEvent.self).map { .cartItem(.updated, $0) }
         case "cart.item_removed": message = data(CartItemEvent.self).map { .cartItem(.removed, $0) }
         case "cart.cleared": message = data(CartCleared.self).map(PageMessage.cartCleared)
         case "checkout": message = data(CartHandoff.self).map(PageMessage.checkout)
-        case "handoff": message = data(HephonHandoff.self).map(PageMessage.handoff)
+        case "handoff": message = data(BiskyHandoff.self).map(PageMessage.handoff)
         case "open_product": message = data(OpenProduct.self).map(PageMessage.openProduct)
         case "session.expired": message = .sessionExpired
         case "resize":
@@ -302,9 +302,9 @@ enum PageEvent: Sendable, Equatable {
         case "close": message = .close
         case "painted": event = .painted
         case "timing":
-            event = data(HephonOpenTiming.self).flatMap { ($0.open ?? 0) >= 0 ? .timing($0) : nil }
+            event = data(BiskyOpenTiming.self).flatMap { ($0.open ?? 0) >= 0 ? .timing($0) : nil }
         case "state":
-            event = data(HephonChatState.self).flatMap { $0.itemCount >= 0 ? .state($0) : nil }
+            event = data(BiskyChatState.self).flatMap { $0.itemCount >= 0 ? .state($0) : nil }
         case "log":
             event = data(LogLine.self).flatMap {
                 logLevels.contains($0.level) ? .log(level: $0.level, message: $0.message) : nil
@@ -400,16 +400,16 @@ public struct CartSnapshotItem: Sendable, Encodable, Equatable {
 }
 
 /// Color scheme for `setTheme`.
-public enum HephonScheme: String, Sendable, Encodable {
+public enum BiskyScheme: String, Sendable, Encodable {
     case light, dark
 }
 
-/// A suggestion on the chat's welcome screen, for `HephonAgentController.setStarters`.
+/// A suggestion on the chat's welcome screen, for `BiskyAgentController.setStarters`.
 /// Tapping it sends `prompt`, or `label` when there is none. Since 2.2.0.
 ///
 /// Both are trimmed. A `label` of 1 to 60 characters and a `prompt` of 1 to 300 are what the
 /// chat takes: `setStarters` refuses a list with any other (`isValid`).
-public struct HephonStarter: Sendable, Equatable, Encodable {
+public struct BiskyStarter: Sendable, Equatable, Encodable {
     /// What the suggestion says.
     public let label: String
     /// What tapping it sends as the shopper's message; `label` when nil.
@@ -430,10 +430,10 @@ public struct HephonStarter: Sendable, Equatable, Encodable {
     }
 }
 
-/// A kind of product a chat never shows, for `HephonAgentController.setRestrictions`. What
+/// A kind of product a chat never shows, for `BiskyAgentController.setRestrictions`. What
 /// your app excludes is added to what the retailer excludes: an app can never show a kind the
 /// retailer hides. Since 2.2.0.
-public enum HephonRestriction: String, Sendable, Encodable, CaseIterable {
+public enum BiskyRestriction: String, Sendable, Encodable, CaseIterable {
     case alcohol
     /// Alcohol-free versions of alcoholic drinks (alcohol-free beer, wine).
     case alcoholFree = "alcohol_free"
@@ -441,8 +441,8 @@ public enum HephonRestriction: String, Sendable, Encodable, CaseIterable {
     case tobacco
 }
 
-/// The longest message `HephonAgentController.sendMessage` sends. Since 2.2.0.
-public let hephonMaxMessageLength = 2000
+/// The longest message `BiskyAgentController.sendMessage` sends. Since 2.2.0.
+public let biskyMaxMessageLength = 2000
 
 /// Whether `value` is 1 to `max` characters, counted as the chat counts them (UTF-16 units).
 private func fits(_ value: String, _ max: Int) -> Bool {
@@ -459,16 +459,16 @@ public struct HostMessage: Sendable, Equatable {
     enum Body: Sendable, Equatable {
         case cartSnapshot([CartSnapshotItem])
         case sessionLaunch(String)
-        case theme(HephonScheme)
+        case theme(BiskyScheme)
         case focus
         case visibility(shown: Bool, at: Int64?)
-        case appearance(HephonAppearance)
-        case text(HephonText)
+        case appearance(BiskyAppearance)
+        case text(BiskyText)
         case chatSend(String)
         case empty
-        case starters([HephonStarter])
+        case starters([BiskyStarter])
         case locale(String)
-        case restrictions([HephonRestriction])
+        case restrictions([BiskyRestriction])
     }
 
     private init(_ type: String, _ data: Body, id: String?, timestamp: Date?) {
@@ -496,7 +496,7 @@ public struct HostMessage: Sendable, Equatable {
 
     /// Your app's color scheme. Accepted; the chat stays light for now.
     public static func theme(
-        _ scheme: HephonScheme, id: String? = nil, timestamp: Date? = nil
+        _ scheme: BiskyScheme, id: String? = nil, timestamp: Date? = nil
     ) -> HostMessage {
         HostMessage("theme", .theme(scheme), id: id, timestamp: timestamp)
     }
@@ -507,7 +507,7 @@ public struct HostMessage: Sendable, Equatable {
     }
 
     /// Whether the chat is on screen. `at` is when the view began to appear, sent once per show:
-    /// the page measures the open from it. `HephonAgentController` sends these itself.
+    /// the page measures the open from it. `BiskyAgentController` sends these itself.
     public static func visibility(
         _ shown: Bool, at: Date? = nil, id: String? = nil, timestamp: Date? = nil
     ) -> HostMessage {
@@ -519,7 +519,7 @@ public struct HostMessage: Sendable, Equatable {
     /// when the retailer switched app changes off (`ready` then lists no `appearance`
     /// capability). Since 1.2.0.
     public static func appearance(
-        _ appearance: HephonAppearance, id: String? = nil, timestamp: Date? = nil
+        _ appearance: BiskyAppearance, id: String? = nil, timestamp: Date? = nil
     ) -> HostMessage {
         HostMessage("appearance", .appearance(appearance), id: id, timestamp: timestamp)
     }
@@ -528,16 +528,16 @@ public struct HostMessage: Sendable, Equatable {
     /// only when a label is), and the chat merges them over what your app sent before. Ignored
     /// when the retailer switched app changes off (`ready` then lists no `text` capability).
     /// Since 1.2.0.
-    public static func text(_ text: HephonText, id: String? = nil, timestamp: Date? = nil) -> HostMessage {
+    public static func text(_ text: BiskyText, id: String? = nil, timestamp: Date? = nil) -> HostMessage {
         HostMessage("text", .text(text), id: id, timestamp: timestamp)
     }
 
     /// `text` sent as the shopper's message, as if typed. Nil when it is empty once trimmed or
-    /// longer than `hephonMaxMessageLength`. The chat drops it while a reply is on its way
-    /// (`HephonChatState.busy`). Since 2.2.0.
+    /// longer than `biskyMaxMessageLength`. The chat drops it while a reply is on its way
+    /// (`BiskyChatState.busy`). Since 2.2.0.
     public static func chatSend(_ text: String, id: String? = nil, timestamp: Date? = nil) -> HostMessage? {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard fits(text, hephonMaxMessageLength) else {
+        guard fits(text, biskyMaxMessageLength) else {
             return nil
         }
         return HostMessage("chat.send", .chatSend(text), id: id, timestamp: timestamp)
@@ -569,13 +569,13 @@ public struct HostMessage: Sendable, Equatable {
     }
 
     /// The welcome screen's suggestions, in place of the retailer's; an empty list brings the
-    /// retailer's back. Nil for more than `HephonStarter.maxCount`, or one that is not
+    /// retailer's back. Nil for more than `BiskyStarter.maxCount`, or one that is not
     /// `isValid`. Ignored when the retailer switched app changes off (`ready` then lists no
     /// `starters` capability). Since 2.2.0.
     public static func starters(
-        _ items: [HephonStarter], id: String? = nil, timestamp: Date? = nil
+        _ items: [BiskyStarter], id: String? = nil, timestamp: Date? = nil
     ) -> HostMessage? {
-        guard items.count <= HephonStarter.maxCount, items.allSatisfy(\.isValid) else {
+        guard items.count <= BiskyStarter.maxCount, items.allSatisfy(\.isValid) else {
             return nil
         }
         return HostMessage("starters", .starters(items), id: id, timestamp: timestamp)
@@ -594,9 +594,9 @@ public struct HostMessage: Sendable, Equatable {
     /// Kinds of product this chat never shows, added to the retailer's. Each kind is sent once.
     /// Since 2.2.0.
     public static func restrictions(
-        _ kinds: [HephonRestriction], id: String? = nil, timestamp: Date? = nil
+        _ kinds: [BiskyRestriction], id: String? = nil, timestamp: Date? = nil
     ) -> HostMessage {
-        var seen = Set<HephonRestriction>()
+        var seen = Set<BiskyRestriction>()
         let unique = kinds.filter { seen.insert($0).inserted }
         return HostMessage("restrictions", .restrictions(unique), id: id, timestamp: timestamp)
     }
@@ -606,10 +606,10 @@ public struct HostMessage: Sendable, Equatable {
         value.range(of: "^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$", options: .regularExpression) != nil
     }
 
-    /// The envelope as JSON text, what the page's `window.hephon.receive` takes.
+    /// The envelope as JSON text, what the page's `window.bisky.receive` takes.
     public func json() -> String {
         let envelope = Outgoing(
-            v: hephonBridgeVersion,
+            v: biskyBridgeVersion,
             id: id,
             type: type,
             ts: milliseconds(timestamp),

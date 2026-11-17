@@ -1,18 +1,18 @@
 import UIKit
 import WebKit
 
-/// The `WKWebView` behind a `HephonAgentController`: WebKit's delegates translated into the
+/// The `WKWebView` behind a `BiskyAgentController`: WebKit's delegates translated into the
 /// controller's calls. Every decision (origins, navigation, microphone, renewal) is the
 /// controller's, where tests reach it.
 @MainActor
 final class WebKitHost: NSObject, WebViewDriving, WKNavigationDelegate, WKUIDelegate {
-    /// The name the page posts to: `window.webkit.messageHandlers.HephonBridge`.
-    static let bridgeName = "HephonBridge"
+    /// The name the page posts to: `window.webkit.messageHandlers.BiskyBridge`.
+    static let bridgeName = "BiskyBridge"
 
     let webView: WKWebView
-    private weak var controller: HephonAgentController?
+    private weak var controller: BiskyAgentController?
 
-    init(controller: HephonAgentController) {
+    init(controller: BiskyAgentController) {
         let configuration = WKWebViewConfiguration()
         // Spoken replies play inline and without a tap.
         configuration.allowsInlineMediaPlayback = true
@@ -47,7 +47,7 @@ final class WebKitHost: NSObject, WebViewDriving, WKNavigationDelegate, WKUIDele
         // The completion-handler form: the async overlay corrupts the calling task's stack.
         try await withCheckedThrowingContinuation { (done: CheckedContinuation<Void, any Error>) in
             webView.callAsyncJavaScript(
-                "window.hephon && window.hephon.receive(m)",
+                "window.bisky && window.bisky.receive(m)",
                 arguments: ["m": json],
                 in: nil,
                 in: .page
@@ -74,7 +74,7 @@ final class WebKitHost: NSObject, WebViewDriving, WKNavigationDelegate, WKUIDele
             return
         }
         let frame = message.frameInfo
-        controller?.receive(json, isMainFrame: frame.isMainFrame, origin: frame.securityOrigin.hephonOrigin)
+        controller?.receive(json, isMainFrame: frame.isMainFrame, origin: frame.securityOrigin.biskyOrigin)
     }
 
     // MARK: WKNavigationDelegate
@@ -136,7 +136,7 @@ final class WebKitHost: NSObject, WebViewDriving, WKNavigationDelegate, WKUIDele
         type: WKMediaCaptureType,
         decisionHandler: @escaping @MainActor (WKPermissionDecision) -> Void
     ) {
-        let from = origin.hephonOrigin
+        let from = origin.biskyOrigin
         Task { [weak controller] in
             let granted = await controller?.allowsMicrophone(origin: from, microphoneOnly: type == .microphone)
             decisionHandler(granted == true ? .grant : .deny)
@@ -146,8 +146,8 @@ final class WebKitHost: NSObject, WebViewDriving, WKNavigationDelegate, WKUIDele
 
 private extension WKSecurityOrigin {
     /// `scheme://host[:port]`, as the controller's allowed origins are written.
-    var hephonOrigin: String? {
-        HephonNavigation.origin(scheme: `protocol`, host: host, port: port)
+    var biskyOrigin: String? {
+        BiskyNavigation.origin(scheme: `protocol`, host: host, port: port)
     }
 }
 

@@ -1,17 +1,17 @@
 #if DEBUG
-    @testable import HephonCommerce
+    @testable import Bisky
     import UIKit
 
     /// Scripted runs for the device checks of the preload work (docs/integrations/SDK-PRELOAD.md
-    /// 7.2 in the Hephon repository). Nothing runs unless the app is launched with HEPHON_RUN:
+    /// 7.2 in the Bisky repository). Nothing runs unless the app is launched with BISKY_RUN:
     ///
-    ///     SIMCTL_CHILD_HEPHON_RUN=preloaded xcrun simctl launch --console booted ai.hephon.commerce.example
+    ///     SIMCTL_CHILD_BISKY_RUN=preloaded xcrun simctl launch --console booted ai.bisky.commerce.example
     ///
-    /// - `cold`, `preloaded`, `reopen`: HEPHON_N opens (5), each printed with its `onTiming`.
-    /// - `stream`: sends HEPHON_SAY, closes the sheet while the reply streams, watches the hidden
+    /// - `cold`, `preloaded`, `reopen`: BISKY_N opens (5), each printed with its `onTiming`.
+    /// - `stream`: sends BISKY_SAY, closes the sheet while the reply streams, watches the hidden
     ///   page, reopens, then reloads the chat while it is shown.
     ///
-    /// HEPHON_MARK=1 flashes a red bar at each open, to find the tap in a screen recording.
+    /// BISKY_MARK=1 flashes a red bar at each open, to find the tap in a screen recording.
     /// The module is imported `@testable` to read the page of a chat that is in no view.
     @MainActor
     enum Measure {
@@ -19,10 +19,10 @@
         private static let start = Date()
 
         static func run(_ shop: Shop, _ chat: Shop.Chat) async {
-            guard let row = environment["HEPHON_RUN"] else {
+            guard let row = environment["BISKY_RUN"] else {
                 return
             }
-            let opens = Int(environment["HEPHON_N"] ?? "") ?? 5
+            let opens = Int(environment["BISKY_N"] ?? "") ?? 5
             // Statics are lazy: start the log's clock now.
             _ = start
             // Let the screen's own preload settle, then start from nothing.
@@ -51,7 +51,7 @@
             case "stream":
                 await stream(shop, chat)
             default:
-                log("unknown HEPHON_RUN \(row)")
+                log("unknown BISKY_RUN \(row)")
             }
             log("done")
         }
@@ -83,14 +83,14 @@
         private static func stream(_ shop: Shop, _ chat: Shop.Chat) async {
             await preload(shop, chat)
             await open(shop, chat, keep: true, "first")
-            let say = environment["HEPHON_SAY"] ?? "add 2 bottles of water to my cart"
+            let say = environment["BISKY_SAY"] ?? "add 2 bottles of water to my cart"
             _ = await script(shop, """
             const box = document.querySelector('textarea[aria-label="Message"]');
             Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value").set.call(box, say);
             box.dispatchEvent(new Event("input", { bubbles: true }));
             setTimeout(() => box.form.requestSubmit(), 50);
             """, ["say": say])
-            await pause(Double(environment["HEPHON_CLOSE_AFTER"] ?? "") ?? 0.8)
+            await pause(Double(environment["BISKY_CLOSE_AFTER"] ?? "") ?? 0.8)
             log("closing while the reply streams: \(await page(shop))")
             shop.presented = nil
             for _ in 1 ... 12 {
@@ -132,7 +132,7 @@
         }
 
         private static func mark(_ on: Bool) {
-            guard environment["HEPHON_MARK"] != nil,
+            guard environment["BISKY_MARK"] != nil,
                   let window = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.keyWindow
             else {
                 return
@@ -157,7 +157,7 @@
         }
 
         private static func log(_ text: String) {
-            print("HephonRun", String(format: "%7.2f", Date().timeIntervalSince(start)), text)
+            print("BiskyRun", String(format: "%7.2f", Date().timeIntervalSince(start)), text)
         }
     }
 #endif

@@ -1,8 +1,8 @@
 import Foundation
-@testable import HephonCommerce
+@testable import Bisky
 import XCTest
 
-/// bridge_v1.json and host_v1.json, the contract every Hephon SDK is tested against.
+/// bridge_v1.json and host_v1.json, the contract every Bisky SDK is tested against.
 final class BridgeContractTests: XCTestCase {
     func testParsesEveryPageMessage() throws {
         let messages = try Fixture.list("bridge_v1", "pageToHost")
@@ -20,7 +20,7 @@ final class BridgeContractTests: XCTestCase {
         XCTAssertEqual(parsed[0].timestamp, Date(timeIntervalSince1970: 1_791_374_400))
         XCTAssertEqual(
             parsed[1].message,
-            .ready(HephonReady(
+            .ready(BiskyReady(
                 orgSlug: "suppy-demo", storeId: "branch-7", capabilities: [],
                 conversationId: nil, hostSessionId: nil
             ))
@@ -79,7 +79,7 @@ final class BridgeContractTests: XCTestCase {
 
         XCTAssertEqual(
             parsed[7].message,
-            .handoff(HephonHandoff(conversationId: "cm1conversation0001", reason: "Asked for a person"))
+            .handoff(BiskyHandoff(conversationId: "cm1conversation0001", reason: "Asked for a person"))
         )
         XCTAssertEqual(parsed[8].message, .openProduct(OpenProduct(itemId: "7309008", catalogId: "48213", storeId: "branch-7")))
         XCTAssertEqual(parsed[9].message, .sessionExpired)
@@ -123,7 +123,7 @@ final class BridgeContractTests: XCTestCase {
         for bad in [
             "not json",
             "[]",
-            #"{"type":"hephon-commerce:cart","cart":{}}"#,
+            #"{"type":"bisky:cart","cart":{}}"#,
             try Fixture.page("close", ["id": ""]),
             try Fixture.page("close", ["data": []]),
             try Fixture.page("close", ["ts": "1791374410000"]),
@@ -213,7 +213,7 @@ final class HostContractTests: XCTestCase {
             let url = try XCTUnwrap(URL(string: raw), raw)
             let isMainFrame = try XCTUnwrap(item["isMainFrame"] as? Bool)
             XCTAssertEqual(
-                HephonNavigation.decide(url, isMainFrame: isMainFrame, allowedOrigins: allowed, chatPath: chatPath)
+                BiskyNavigation.decide(url, isMainFrame: isMainFrame, allowedOrigins: allowed, chatPath: chatPath)
                     .rawValue,
                 item["expect"] as? String,
                 "\(raw) (main frame: \(isMainFrame))"
@@ -225,21 +225,21 @@ final class HostContractTests: XCTestCase {
         for item in try Fixture.list("host_v1", "origins") {
             let raw = try XCTUnwrap(item["url"] as? String)
             let url = try XCTUnwrap(URL(string: raw), raw)
-            XCTAssertEqual(HephonNavigation.origin(of: url), item["expect"] as? String, raw)
+            XCTAssertEqual(BiskyNavigation.origin(of: url), item["expect"] as? String, raw)
         }
     }
 
     /// WKSecurityOrigin reports port 0 for the scheme's default port.
     func testOriginFromSecurityOriginParts() {
         XCTAssertEqual(
-            HephonNavigation.origin(scheme: "https", host: "commerce.hephon.ai", port: 0),
-            "https://commerce.hephon.ai"
+            BiskyNavigation.origin(scheme: "https", host: "bisky.ai", port: 0),
+            "https://bisky.ai"
         )
-        XCTAssertEqual(HephonNavigation.origin(scheme: "HTTPS", host: "Chat.Suppy.app", port: 443), "https://chat.suppy.app")
-        XCTAssertEqual(HephonNavigation.origin(scheme: "http", host: "localhost", port: 3000), "http://localhost:3000")
-        XCTAssertEqual(HephonNavigation.origin(scheme: "http", host: "example.com", port: 443), "http://example.com:443")
-        XCTAssertNil(HephonNavigation.origin(scheme: "file", host: "", port: 0))
-        XCTAssertNil(HephonNavigation.origin(scheme: "https", host: "", port: 0))
+        XCTAssertEqual(BiskyNavigation.origin(scheme: "HTTPS", host: "Chat.Suppy.app", port: 443), "https://chat.suppy.app")
+        XCTAssertEqual(BiskyNavigation.origin(scheme: "http", host: "localhost", port: 3000), "http://localhost:3000")
+        XCTAssertEqual(BiskyNavigation.origin(scheme: "http", host: "example.com", port: 443), "http://example.com:443")
+        XCTAssertNil(BiskyNavigation.origin(scheme: "file", host: "", port: 0))
+        XCTAssertNil(BiskyNavigation.origin(scheme: "https", host: "", port: 0))
     }
 
     func testBuildsEveryChatURL() throws {
@@ -248,12 +248,12 @@ final class HostContractTests: XCTestCase {
             let token = item["launchToken"] as? String
             let code = item["launchCode"] as? String
             if token != nil, code != nil {
-                // HephonLaunch is one value: a token and a code together cannot be written.
+                // BiskyLaunch is one value: a token and a code together cannot be written.
                 XCTAssertEqual(item["expect"] as? String, "error", comment)
                 continue
             }
-            let launch: HephonLaunch? = token.map(HephonLaunch.token) ?? code.map(HephonLaunch.code)
-            let url = try HephonAgentController.chatURL(
+            let launch: BiskyLaunch? = token.map(BiskyLaunch.token) ?? code.map(BiskyLaunch.code)
+            let url = try BiskyAgentController.chatURL(
                 host: XCTUnwrap(URL(string: XCTUnwrap(item["host"] as? String))),
                 organization: XCTUnwrap(item["organization"] as? String),
                 launch: launch,
@@ -268,14 +268,14 @@ final class HostContractTests: XCTestCase {
     }
 
     func testChatURLReportsThisSDK() {
-        let url = HephonAgentController.chatURL(
-            host: HephonAgentController.defaultHost, organization: "suppy", launch: .code("a+b/c")
+        let url = BiskyAgentController.chatURL(
+            host: BiskyAgentController.defaultHost, organization: "suppy", launch: .code("a+b/c")
         )
         XCTAssertEqual(
             url.absoluteString,
-            "https://commerce.hephon.ai/c/suppy?code=a%2Bb%2Fc&embed=ios&sdk=\(HephonCommerceSDK.version)"
+            "https://bisky.ai/c/suppy?code=a%2Bb%2Fc&embed=ios&sdk=\(BiskySDK.version)"
         )
-        XCTAssertNotNil(HephonCommerceSDK.version.range(of: #"^\d+\.\d+\.\d+$"#, options: .regularExpression))
+        XCTAssertNotNil(BiskySDK.version.range(of: #"^\d+\.\d+\.\d+$"#, options: .regularExpression))
     }
 }
 
@@ -287,7 +287,7 @@ struct Parts: Equatable {
 
     init(_ url: URL) {
         let parts = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        origin = HephonNavigation.origin(of: url)
+        origin = BiskyNavigation.origin(of: url)
         path = parts?.percentEncodedPath ?? ""
         let decode = { (text: String) in text.replacingOccurrences(of: "+", with: " ").removingPercentEncoding ?? text }
         query = Dictionary(

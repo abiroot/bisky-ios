@@ -53,18 +53,18 @@
 	},
 	"chatUrl": [
 		{
-			"host": "https://commerce.hephon.ai",
+			"host": "https://bisky.ai",
 			"organization": "suppy",
 			"embed": "ios",
 			"sdk": "1.2.0",
 			"appearance": {
 				"scheme": "dark"
 			},
-			"expect": "https://commerce.hephon.ai/c/suppy?embed=ios&sdk=1.2.0&scheme=dark",
+			"expect": "https://bisky.ai/c/suppy?embed=ios&sdk=1.2.0&scheme=dark",
 			"$comment": "One override: the chat opens dark."
 		},
 		{
-			"host": "https://commerce.hephon.ai",
+			"host": "https://bisky.ai",
 			"organization": "suppy-demo",
 			"launchToken": "token-1",
 			"embed": "flutter",
@@ -79,7 +79,7 @@
 				"corners": "soft",
 				"header": "brand"
 			},
-			"expect": "https://commerce.hephon.ai/c/suppy-demo?lt=token-1&embed=flutter&sdk=1.2.0&locale=ar&scheme=auto&primaryColor=%231E1EF2&deepColor=%230B0B6B&accentColor=%23D9F99D&dealColor=%2315803D&corners=soft&header=brand",
+			"expect": "https://bisky.ai/c/suppy-demo?lt=token-1&embed=flutter&sdk=1.2.0&locale=ar&scheme=auto&primaryColor=%231E1EF2&deepColor=%230B0B6B&accentColor=%23D9F99D&dealColor=%2315803D&corners=soft&header=brand",
 			"$comment": "Every override, with a launch token. A colour is #RRGGBB and its # is query-encoded as %23: left bare it would start the URL's fragment and the colour would never reach the page."
 		},
 		{
@@ -96,7 +96,7 @@
 			"$comment": "A colour is sent as written: the SDK does not change its case."
 		},
 		{
-			"host": "https://commerce.hephon.ai",
+			"host": "https://bisky.ai",
 			"organization": "suppy",
 			"embed": "android",
 			"sdk": "1.2.0",
@@ -120,11 +120,11 @@
 				"productSheet": false,
 				"addFromCards": true
 			},
-			"expect": "https://commerce.hephon.ai/c/suppy?embed=android&sdk=1.2.0&ctaColor=%230A7A3D&headerColor=%23111827&bubbleColor=%232563EB&surfaceColor=%23F8FAFC&buttons=rounded&bubble=soft&font=system&starterStyle=list&showHeader=false&showLogo=false&showBasket=false&showCheckout=false&showNewChat=false&showHistory=true&showFollowUps=false&showSteps=false&productSheet=false&addFromCards=true",
+			"expect": "https://bisky.ai/c/suppy?embed=android&sdk=1.2.0&ctaColor=%230A7A3D&headerColor=%23111827&bubbleColor=%232563EB&surfaceColor=%23F8FAFC&buttons=rounded&bubble=soft&font=system&starterStyle=list&showHeader=false&showLogo=false&showBasket=false&showCheckout=false&showNewChat=false&showHistory=true&showFollowUps=false&showSteps=false&productSheet=false&addFromCards=true",
 			"$comment": "The part colours, the button shape and every flag. A flag that is set is sent whether it is true or false; one that is not set is left out."
 		},
 		{
-			"host": "https://commerce.hephon.ai",
+			"host": "https://bisky.ai",
 			"organization": "suppy",
 			"store": "7",
 			"embed": "flutter",
@@ -143,16 +143,16 @@
 				"hideVoice": true,
 				"hideCall": true
 			},
-			"expect": "https://commerce.hephon.ai/c/suppy?store=7&embed=flutter&sdk=2.0.0&cardColor=%23FFFFFF&textColor=%23111827&mutedColor=%236B7280&lineColor=%23E5E7EB&fontFamily=Avenir%20Next&showBasketButton=true&showBasketBar=false&showAssistantName=false&showStarters=false&hideOrderHelp=true&hideVoice=true&hideCall=true",
+			"expect": "https://bisky.ai/c/suppy?store=7&embed=flutter&sdk=2.0.0&cardColor=%23FFFFFF&textColor=%23111827&mutedColor=%236B7280&lineColor=%23E5E7EB&fontFamily=Avenir%20Next&showBasketButton=true&showBasketBar=false&showAssistantName=false&showStarters=false&hideOrderHelp=true&hideVoice=true&hideCall=true",
 			"$comment": "Since 2.0.0: the card, text, muted and line colours, a typeface of the device (its space is query-encoded; `+` or `%20`, the comparison is on decoded pairs), and the basket's two parts on their own. The app keeps its own cart bar and hides the chat's summary bar."
 		},
 		{
-			"host": "https://commerce.hephon.ai",
+			"host": "https://bisky.ai",
 			"organization": "suppy",
 			"embed": "android",
 			"sdk": "1.2.0",
 			"appearance": {},
-			"expect": "https://commerce.hephon.ai/c/suppy?embed=android&sdk=1.2.0",
+			"expect": "https://bisky.ai/c/suppy?embed=android&sdk=1.2.0",
 			"$comment": "No override set: the URL is the one host_v1.json describes."
 		}
 	],

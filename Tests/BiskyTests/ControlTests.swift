@@ -1,9 +1,9 @@
 import Foundation
-@testable import HephonCommerce
+@testable import Bisky
 import UIKit
 import XCTest
 
-private let hephon = "https://commerce.hephon.ai"
+private let bisky = "https://bisky.ai"
 
 /// control_v1.json: what an app can do with an open chat beyond its look, since SDK 2.2.0.
 final class ControlContractTests: XCTestCase {
@@ -24,18 +24,18 @@ final class ControlContractTests: XCTestCase {
         ])
         XCTAssertEqual(
             parsed[1].event,
-            .state(HephonChatState(view: .welcome, busy: false, basketOpen: false, itemCount: 0))
+            .state(BiskyChatState(view: .welcome, busy: false, basketOpen: false, itemCount: 0))
         )
         XCTAssertEqual(
             parsed[2].event,
-            .state(HephonChatState(
+            .state(BiskyChatState(
                 view: .conversation, busy: true, basketOpen: false, itemCount: 3, conversationId: "conv-1"
             ))
         )
         XCTAssertEqual(parsed[2].timestamp, Date(timeIntervalSince1970: 1_791_374_422))
         XCTAssertEqual(
             parsed[3].event,
-            .state(HephonChatState(
+            .state(BiskyChatState(
                 view: .welcome, busy: false, basketOpen: false, itemCount: 0, previousChats: 3, memory: true
             ))
         )
@@ -73,14 +73,14 @@ final class ControlContractTests: XCTestCase {
             case "starters":
                 try .starters(
                     XCTUnwrap(data["items"] as? [[String: String]]).map {
-                        HephonStarter(label: $0["label"] ?? "", prompt: $0["prompt"])
+                        BiskyStarter(label: $0["label"] ?? "", prompt: $0["prompt"])
                     },
                     id: id, timestamp: at
                 )
             case "locale": try .locale(XCTUnwrap(data["locale"] as? String), id: id, timestamp: at)
             case "restrictions":
                 try .restrictions(
-                    XCTUnwrap(data["exclude"] as? [String]).map { try XCTUnwrap(HephonRestriction(rawValue: $0)) },
+                    XCTUnwrap(data["exclude"] as? [String]).map { try XCTUnwrap(BiskyRestriction(rawValue: $0)) },
                     id: id, timestamp: at
                 )
             default: nil
@@ -105,16 +105,16 @@ final class ControlContractTests: XCTestCase {
             case "restrictions":
                 // Only the four kinds can be written.
                 for kind in try XCTUnwrap(data["exclude"] as? [String]) {
-                    XCTAssertNil(HephonRestriction(rawValue: kind))
+                    XCTAssertNil(BiskyRestriction(rawValue: kind))
                 }
             case "locale":
                 try XCTAssertNil(HostMessage.locale(XCTUnwrap(data["locale"] as? String)))
             default:
                 let items = try XCTUnwrap(data["items"] as? [[String: String]]).map {
-                    HephonStarter(label: $0["label"] ?? "")
+                    BiskyStarter(label: $0["label"] ?? "")
                 }
                 XCTAssertNil(HostMessage.starters(items))
-                XCTAssertNotNil(HostMessage.starters(Array(items.prefix(HephonStarter.maxCount))))
+                XCTAssertNotNil(HostMessage.starters(Array(items.prefix(BiskyStarter.maxCount))))
             }
         }
     }
@@ -127,15 +127,15 @@ final class ControlContractTests: XCTestCase {
         XCTAssertNil(HostMessage.chatSend(String(repeating: "a", count: 2001)))
         XCTAssertNil(HostMessage.chatSend(""))
 
-        XCTAssertEqual(HephonStarter(label: "  Breakfast ", prompt: " Eggs and bread "), HephonStarter(
+        XCTAssertEqual(BiskyStarter(label: "  Breakfast ", prompt: " Eggs and bread "), BiskyStarter(
             label: "Breakfast", prompt: "Eggs and bread"
         ))
-        XCTAssertTrue(HephonStarter(label: String(repeating: "a", count: 60)).isValid)
-        XCTAssertFalse(HephonStarter(label: String(repeating: "a", count: 61)).isValid)
-        XCTAssertFalse(HephonStarter(label: "  ").isValid)
-        XCTAssertFalse(HephonStarter(label: "Snacks", prompt: " ").isValid)
-        XCTAssertFalse(HephonStarter(label: "Snacks", prompt: String(repeating: "a", count: 301)).isValid)
-        XCTAssertNil(HostMessage.starters([HephonStarter(label: "")]))
+        XCTAssertTrue(BiskyStarter(label: String(repeating: "a", count: 60)).isValid)
+        XCTAssertFalse(BiskyStarter(label: String(repeating: "a", count: 61)).isValid)
+        XCTAssertFalse(BiskyStarter(label: "  ").isValid)
+        XCTAssertFalse(BiskyStarter(label: "Snacks", prompt: " ").isValid)
+        XCTAssertFalse(BiskyStarter(label: "Snacks", prompt: String(repeating: "a", count: 301)).isValid)
+        XCTAssertNil(HostMessage.starters([BiskyStarter(label: "")]))
         // An empty list brings the retailer's back.
         try XCTAssertTrue(XCTUnwrap(HostMessage.starters([])).json().contains(#""data":{"items":[]}"#))
 
@@ -149,13 +149,13 @@ final class ControlContractTests: XCTestCase {
         // Each kind once, the rest by its wire name.
         let restrictions = HostMessage.restrictions([.alcoholFree, .pork, .alcoholFree, .tobacco]).json()
         XCTAssertTrue(restrictions.contains(#""data":{"exclude":["alcohol_free","pork","tobacco"]}"#), restrictions)
-        XCTAssertEqual(HephonRestriction.allCases.map(\.rawValue), ["alcohol", "alcohol_free", "pork", "tobacco"])
+        XCTAssertEqual(BiskyRestriction.allCases.map(\.rawValue), ["alcohol", "alcohol_free", "pork", "tobacco"])
     }
 }
 
 /// A view showing the chat, recording when the chat asks it to close.
 @MainActor
-private final class FakePresenter: HephonChatPresenter {
+private final class FakePresenter: BiskyChatPresenter {
     var closed = 0
 
     func closeChat() {
@@ -166,10 +166,10 @@ private final class FakePresenter: HephonChatPresenter {
 @MainActor
 final class ControlControllerTests: XCTestCase {
     private func open(
-        starters: [HephonStarter]? = nil,
-        restrictions: [HephonRestriction]? = nil
-    ) -> (HephonAgentController, FakeWebView) {
-        let controller = HephonAgentController(
+        starters: [BiskyStarter]? = nil,
+        restrictions: [BiskyRestriction]? = nil
+    ) -> (BiskyAgentController, FakeWebView) {
+        let controller = BiskyAgentController(
             organization: "suppy-demo", store: "branch-7", locale: "en",
             starters: starters, restrictions: restrictions
         )
@@ -179,8 +179,8 @@ final class ControlControllerTests: XCTestCase {
         return (controller, web)
     }
 
-    private func post(_ controller: HephonAgentController, _ json: String) {
-        controller.receive(json, isMainFrame: true, origin: hephon)
+    private func post(_ controller: BiskyAgentController, _ json: String) {
+        controller.receive(json, isMainFrame: true, origin: bisky)
     }
 
     private func data(_ json: String) throws -> NSDictionary {
@@ -196,7 +196,7 @@ final class ControlControllerTests: XCTestCase {
         controller.closeBasket()
         controller.openHistory()
         controller.openMemory()
-        XCTAssertTrue(controller.setStarters([HephonStarter(label: "Breakfast for 4")]))
+        XCTAssertTrue(controller.setStarters([BiskyStarter(label: "Breakfast for 4")]))
         XCTAssertTrue(controller.setLocale("ar-AE"))
         controller.setRestrictions([.pork])
         await settle()
@@ -221,8 +221,8 @@ final class ControlControllerTests: XCTestCase {
         try post(controller, Fixture.page("ready"))
         XCTAssertFalse(controller.sendMessage("   "))
         XCTAssertFalse(controller.setLocale("arabic please"))
-        XCTAssertFalse(controller.setStarters((1 ... 7).map { HephonStarter(label: "\($0)") }))
-        XCTAssertFalse(controller.setStarters([HephonStarter(label: "")]))
+        XCTAssertFalse(controller.setStarters((1 ... 7).map { BiskyStarter(label: "\($0)") }))
+        XCTAssertFalse(controller.setStarters([BiskyStarter(label: "")]))
         await settle()
         XCTAssertEqual(web.delivered, [])
         // Nothing was kept either: a reload sends nothing.
@@ -242,13 +242,13 @@ final class ControlControllerTests: XCTestCase {
 
     func testSendsTheOpeningStartersAndRestrictionsOnReady() async throws {
         let (controller, web) = open(
-            starters: [HephonStarter(label: "Iftar essentials", prompt: "I need everything for an iftar for 6 people")],
+            starters: [BiskyStarter(label: "Iftar essentials", prompt: "I need everything for an iftar for 6 people")],
             restrictions: [.alcohol, .alcoholFree]
         )
         // Never on the chat URL.
         XCTAssertEqual(
             controller.url.absoluteString,
-            "\(hephon)/c/suppy-demo?store=branch-7&embed=ios&sdk=\(HephonCommerceSDK.version)&locale=en"
+            "\(bisky)/c/suppy-demo?store=branch-7&embed=ios&sdk=\(BiskySDK.version)&locale=en"
         )
         try post(controller, Fixture.page("ready"))
         await until { web.delivered.count == 2 }
@@ -260,13 +260,13 @@ final class ControlControllerTests: XCTestCase {
     }
 
     func testSendsTheKeptStartersRestrictionsAndLocaleAgainOnEveryReady() async throws {
-        let (controller, web) = open(starters: [HephonStarter(label: "Breakfast")], restrictions: [.tobacco])
+        let (controller, web) = open(starters: [BiskyStarter(label: "Breakfast")], restrictions: [.tobacco])
         try post(controller, Fixture.page("ready"))
         await until { web.delivered.count == 2 }
 
         // The last of each is what is kept, not a merge.
-        controller.setStarters([HephonStarter(label: "Snacks", prompt: "Snacks for 6")])
-        controller.setStarters([HephonStarter(label: "Dinner")])
+        controller.setStarters([BiskyStarter(label: "Snacks", prompt: "Snacks for 6")])
+        controller.setStarters([BiskyStarter(label: "Dinner")])
         controller.setRestrictions([.pork, .alcohol])
         controller.setLocale("fr")
         controller.setLocale("ar-AE")
@@ -310,7 +310,7 @@ final class ControlControllerTests: XCTestCase {
 
     func testCallsOnStateChangeForEveryState() throws {
         let (controller, _) = open()
-        var states: [HephonChatState] = []
+        var states: [BiskyChatState] = []
         controller.onStateChange = { states.append($0) }
         for message in try Fixture.list("control_v1", "pageToHost") {
             post(controller, Fixture.json(message))
@@ -349,12 +349,12 @@ final class ControlControllerTests: XCTestCase {
 
     func testTheViewIsASheetOrAFullScreenPage() {
         let (controller, _) = open()
-        let sheet = HephonAgentViewController(controller: controller)
+        let sheet = BiskyAgentViewController(controller: controller)
         XCTAssertEqual(sheet.presentation, .sheet)
         XCTAssertEqual(sheet.modalPresentationStyle, .pageSheet)
         XCTAssertEqual(sheet.sheetPresentationController?.prefersGrabberVisible, true)
 
-        let page = HephonAgentViewController(controller: controller, presentation: .fullScreen)
+        let page = BiskyAgentViewController(controller: controller, presentation: .fullScreen)
         XCTAssertEqual(page.presentation, .fullScreen)
         XCTAssertEqual(page.modalPresentationStyle, .fullScreen)
         XCTAssertNil(page.sheetPresentationController)
@@ -362,14 +362,14 @@ final class ControlControllerTests: XCTestCase {
 
     func testTheViewClosesWithSwiftUIsDismissOrByPoppingItself() {
         let (controller, _) = open()
-        let chat = HephonAgentViewController(controller: controller, presentation: .fullScreen)
+        let chat = BiskyAgentViewController(controller: controller, presentation: .fullScreen)
         var dismissed = 0
         chat.dismissChat = { dismissed += 1 }
         chat.closeChat()
         XCTAssertEqual(dismissed, 1)
 
         // Pushed on a navigation controller: the back arrow pops it.
-        let pushed = HephonAgentViewController(controller: controller)
+        let pushed = BiskyAgentViewController(controller: controller)
         let navigation = UINavigationController(rootViewController: UIViewController())
         navigation.pushViewController(pushed, animated: false)
         XCTAssertEqual(navigation.viewControllers.count, 2)
@@ -377,7 +377,7 @@ final class ControlControllerTests: XCTestCase {
         XCTAssertEqual(navigation.viewControllers.count, 1)
 
         // Neither presented nor pushed: it stays, for the app's onClose to handle.
-        let alone = HephonAgentViewController(controller: controller)
+        let alone = BiskyAgentViewController(controller: controller)
         alone.closeChat()
         XCTAssertNil(alone.presentingViewController)
     }

@@ -1,0 +1,57 @@
+{
+	"$comment": "Since SDK 2.6.0 (ARCHITECTURE.md ADR-5.4): a `text` message may carry `locale`, the language its wording is for. The chat keeps one set per language and shows the set for the language it is in; a `text` without `locale` is for the app's language, as before 2.6.0, and is shown when no set matches. An SDK keeps every set it was given (one per locale, the locale-less one included) and sends them all again on each `ready`.",
+	"textKeys": ["locale"],
+	"hostToPage": [
+		{
+			"v": 1,
+			"id": "4c1d2a8e-6f0b-4b7a-9d3e-2a5f8c1e0b01",
+			"type": "text",
+			"ts": 1791374430000,
+			"data": {
+				"locale": "ar-AE",
+				"welcomeTitle": "شو تبا تشتري اليوم؟",
+				"labels": { "checkout": "ادفع الحين" }
+			}
+		},
+		{
+			"v": 1,
+			"id": "4c1d2a8e-6f0b-4b7a-9d3e-2a5f8c1e0b02",
+			"type": "text",
+			"ts": 1791374430001,
+			"data": {
+				"locale": "en",
+				"welcomeTitle": "What can we get you?",
+				"labels": { "checkout": "Pay now" }
+			}
+		},
+		{
+			"v": 1,
+			"id": "4c1d2a8e-6f0b-4b7a-9d3e-2a5f8c1e0b03",
+			"type": "text",
+			"ts": 1791374430002,
+			"data": { "placeholder": "Ask us anything" }
+		}
+	],
+	"kept": {
+		"$comment": "What an SDK holds after the three messages above, keyed by locale (\"\" for none), and resends on `ready`.",
+		"ar-AE": {
+			"welcomeTitle": "شو تبا تشتري اليوم؟",
+			"labels": { "checkout": "ادفع الحين" }
+		},
+		"en": {
+			"welcomeTitle": "What can we get you?",
+			"labels": { "checkout": "Pay now" }
+		},
+		"": { "placeholder": "Ask us anything" }
+	},
+	"rejected": [
+		{
+			"v": 1,
+			"id": "4c1d2a8e-6f0b-4b7a-9d3e-2a5f8c1e0b04",
+			"type": "text",
+			"ts": 1791374430003,
+			"data": { "locale": "arabic please", "welcomeTitle": "x" },
+			"$comment": "`locale` is a BCP 47 tag; a message with anything else is rejected whole."
+		}
+	]
+}
